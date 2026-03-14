@@ -5,6 +5,7 @@ import {
   AlertTriangle, Clock, Users, TrendingUp, MapPin, Mic, Camera,
   ChevronRight, Star, ArrowUpRight
 } from 'lucide-react';
+import PipelineFlow from '../components/PipelineFlow';
 import Footer from '../components/Footer';
 
 function AnimatedCounter({ target, suffix = '', prefix = '' }) {
@@ -115,6 +116,23 @@ export default function LandingPage() {
           <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-1.5">
             <div className="w-1.5 h-3 bg-white/40 rounded-full animate-pulse" />
           </div>
+        </div>
+      </section>
+
+      {/* Pipeline Section */}
+      <section className="py-24 bg-gradient-to-b from-navy-900 to-navy-800">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PipelineFlow
+            title="Reality Check Pipeline"
+            subtitle="OpenAI Whisper anchors each intake before GPT-powered prioritization."
+            badgeText="Live AI pipeline"
+            activeIndex={3}
+            extra={{
+              label: 'Latest Whisper session',
+              value: 'Whisper Large-v3 transcribed a bilingual complaint in 2.4s, normalized punctuation, and surfaced misinformation risk.',
+              meta: 'Latency 1.8s - Confidence 98.2% - Model Whisper Large-v3',
+            }}
+          />
         </div>
       </section>
 

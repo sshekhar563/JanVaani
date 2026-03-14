@@ -189,7 +189,7 @@ export const proofOfWork = [
     description: 'Road surface repaired using hot mix asphalt. Quality inspection passed. 3-month warranty from contractor.',
     beforeImage: 'pothole_before.jpg',
     afterImage: 'pothole_after.jpg',
-    cost: '₹45,000',
+    cost: 'Rs. 45,000',
     contractor: 'ABC Road Builders Pvt. Ltd.',
   },
   {
@@ -203,7 +203,7 @@ export const proofOfWork = [
     description: 'Complete waste removal and sanitization. New dustbins installed. "No Dumping" signage placed. Daily inspection route updated.',
     beforeImage: 'park_dirty.jpg',
     afterImage: 'park_clean.jpg',
-    cost: '₹12,000',
+    cost: 'Rs. 12,000',
     contractor: 'Municipal Corporation, Ward 5',
   },
   {
@@ -217,7 +217,7 @@ export const proofOfWork = [
     description: 'Emergency structural reinforcement completed on east wing. Steel bracing installed. Building certified safe for occupancy. Full renovation scheduled for summer break.',
     beforeImage: 'school_crack.jpg',
     afterImage: 'school_fixed.jpg',
-    cost: '₹2,80,000',
+    cost: 'Rs. 2,80,000',
     contractor: 'National Building Corp.',
   },
   {
@@ -231,7 +231,7 @@ export const proofOfWork = [
     description: 'New 8-unit community toilet block with running water, solar lighting, and disabled access. Maintenance agreement signed with local NGO partner.',
     beforeImage: 'toilet_site.jpg',
     afterImage: 'toilet_built.jpg',
-    cost: '₹8,50,000',
+    cost: 'Rs. 8,50,000',
     contractor: 'Swachh Solutions Ltd.',
   },
 ];

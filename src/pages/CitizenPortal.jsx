@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { 
   Mic, Type, Image, Upload, MapPin, ChevronDown, Send, CheckCircle2,
   Brain, LayoutDashboard, Hammer, ShieldCheck, Clock, ArrowRight, 
   AlertCircle, Loader2, X
 } from 'lucide-react';
-import { categories, issues, statusSteps } from '../data/mockData';
+import { categories, issues } from '../data/mockData';
+import PipelineFlow, { pipelineSteps } from '../components/PipelineFlow';
 import Footer from '../components/Footer';
 
 function VoiceInput() {
@@ -16,7 +17,7 @@ function VoiceInput() {
       setRecording(true);
       setTranscript('');
       setTimeout(() => {
-        setTranscript('सड़क पर बड़ा गड्ढा है... MG Road पर... बस स्टॉप के पास... बहुत खतरनाक है...');
+        setTranscript('???? ?? ???? ????? ??... ???? ??? ?? ?? ????? ?? ???... ???? ?????? ??...');
         setRecording(false);
       }, 4000);
     } else {
@@ -68,7 +69,7 @@ function VoiceInput() {
         <div className="bg-trust-500/5 border border-trust-500/20 rounded-xl p-4 animate-fade-in">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-trust-400" />
-            <span className="text-xs font-medium text-trust-400">AI Transcription (Hindi → English)</span>
+            <span className="text-xs font-medium text-trust-400">AI Transcription (Hindi to English)</span>
           </div>
           <p className="text-sm text-gray-300 italic mb-2">{transcript}</p>
           <p className="text-sm text-gray-400">
@@ -115,7 +116,7 @@ function ImageInput() {
               <div className="text-center">
                 <Image className="w-12 h-12 text-gray-500 mx-auto mb-2" />
                 <p className="text-xs text-gray-400">pothole_mg_road.jpg</p>
-                <p className="text-xs text-gray-500">2.4 MB • 1920x1080</p>
+                <p className="text-xs text-gray-500">2.4 MB / 1920x1080</p>
               </div>
             </div>
             <button
@@ -216,16 +217,80 @@ function LiveTracker() {
 export default function CitizenPortal() {
   const [inputMode, setInputMode] = useState('text');
   const [submitted, setSubmitted] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [loadingAI, setLoadingAI] = useState(false);
   const [formData, setFormData] = useState({
     category: '',
     location: '',
     description: '',
   });
+  const [pipelineStep, setPipelineStep] = useState(-1);
+  const [pipelineActive, setPipelineActive] = useState(false);
+  const pipelineTimers = useRef([]);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    return () => pipelineTimers.current.forEach(clearTimeout);
+  }, []);
+
+  const getTranscriptFallback = () => (
+    inputMode === 'voice'
+      ? 'Whisper transcribed a Hindi (Haryanvi) plea about MG Road pothole with high urgency.'
+      : formData.description || 'Citizen text ready for NLP analysis.'
+  );
+
+  const startPipeline = () => {
+    pipelineTimers.current.forEach(clearTimeout);
+    pipelineTimers.current = [];
+    setPipelineActive(true);
+    setPipelineStep(-1);
+    pipelineSteps.forEach((_, idx) => {
+      pipelineTimers.current.push(
+        setTimeout(() => {
+          setPipelineStep(idx);
+        }, idx * 900)
+      );
+    });
+    pipelineTimers.current.push(
+      setTimeout(() => setPipelineActive(false), pipelineSteps.length * 900 + 600)
+    );
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+
+    startPipeline();
+    setAnalysis(null);
+
+    setLoadingAI(true);
+
+    try {
+      const res = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: formData.description,
+          location: formData.location,
+          category: formData.category,
+        }),
+      });
+
+      const data = await res.json();
+
+      setAnalysis({
+        ...data,
+        transcript: data.transcript ?? getTranscriptFallback(),
+      });
+      setSubmitted(true);
+
+    } catch (err) {
+      console.error("NLP analysis failed:", err);
+    }
+
+    setLoadingAI(false);
+
+    setTimeout(() => setSubmitted(false), 5200);
   };
 
   const modes = [
@@ -233,6 +298,8 @@ export default function CitizenPortal() {
     { key: 'text', label: 'Text', icon: Type },
     { key: 'image', label: 'Image', icon: Image },
   ];
+
+  const transcriptPreview = analysis?.transcript ?? getTranscriptFallback();
 
   return (
     <div className="min-h-screen bg-navy-900 text-white pt-20">
@@ -319,13 +386,20 @@ export default function CitizenPortal() {
                 type="submit"
                 className="w-full btn-primary text-base py-4 flex items-center justify-center gap-2"
               >
-                {submitted ? (
+                {loadingAI ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5" /> Submitted Successfully!
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    AI Processing...
+                  </>
+                ) : submitted ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    Submitted Successfully!
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" /> Submit Report
+                    <Send className="w-5 h-5" />
+                    Submit Report
                   </>
                 )}
               </button>
@@ -339,12 +413,67 @@ export default function CitizenPortal() {
                   </div>
                 </div>
               )}
+              {analysis && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4 animate-fade-in">
+                  
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-medium text-blue-400">
+                      AI Complaint Analysis
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+
+                    <div>
+                      <span className="text-gray-500">Category</span>
+                      <p className="text-white font-medium">{analysis.category}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">Sentiment</span>
+                      <p className="text-white font-medium">{analysis.sentiment}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">Urgency Score</span>
+                      <p className="text-white font-medium">
+                        {(analysis.urgency * 100).toFixed(0)}%
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500">Detected Location</span>
+                      <p className="text-white font-medium">
+                        {analysis.location || "Unknown"}
+                      </p>
+                    </div>
+
+                  </div>
+                  <div className="mt-4 bg-navy-900/40 border border-white/5 rounded-2xl p-3">
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-gray-500 mb-1">Whisper transcript</p>
+                    <p className="text-sm text-gray-200 leading-relaxed break-words">{analysis.transcript}</p>
+                  </div>
+
+                </div>
+              )}
             </form>
           </div>
 
-          {/* Live Tracker Section */}
-          <div className="lg:col-span-2">
+          {/* Live Tracker + Pipeline */}
+          <div className="lg:col-span-2 space-y-6">
             <LiveTracker />
+            <PipelineFlow
+              activeIndex={pipelineStep}
+              badgeText={pipelineActive ? 'Live pipeline' : 'Pipeline snapshot'}
+              title="Reality Check Pipeline"
+              subtitle="Whisper → GPT → Leader action in one verified stream."
+              extra={{
+                label: 'Whisper preview',
+                value: transcriptPreview,
+                meta: pipelineActive ? 'Streaming with Whisper + GPT' : 'Awaiting next citizen intake',
+              }}
+            />
           </div>
         </div>
       </div>

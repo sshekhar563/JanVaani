@@ -8,14 +8,14 @@ import {
   Bell, Search, User, Calendar, Shield, ChevronDown,
   BarChart3, TrendingUp, Activity
 } from 'lucide-react';
-import { trustIndexData, dashboardStats } from '../data/mockData';
+import { trustIndexData } from '../data/mockData';
 
 function DashboardHeader() {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
         <h1 className="text-2xl font-bold text-white">Leadership War Room</h1>
-        <p className="text-sm text-gray-400 mt-1">Welcome back, District Collector • Last updated 2 min ago</p>
+        <p className="text-sm text-gray-400 mt-1">Welcome back, District Collector - Last updated 2 min ago</p>
       </div>
       <div className="flex items-center gap-3">
         {/* Search */}

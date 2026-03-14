@@ -55,10 +55,10 @@ export default function Footer() {
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-gray-500 text-xs">
-            © 2024 Jan Vaani. Made with <Heart className="inline w-3 h-3 text-red-400" /> for better governance.
+            Copyright 2024 Jan Vaani. Made with <Heart className="inline w-3 h-3 text-red-400" /> for better governance.
           </p>
           <p className="text-gray-500 text-xs">
-            Powered by AI • Built for India 🇮🇳
+            Powered by AI - Built for India.
           </p>
         </div>
       </div>
