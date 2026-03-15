@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, Lock, Eye, EyeOff, Shield, ArrowRight, Smartphone } from 'lucide-react';
+import { DotGrid } from '../components/AnimatedBackground';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,6 +35,21 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 pt-20 pb-10">
+      {/* DotGrid animated background */}
+      <div style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
+        <DotGrid
+          dotSize={2}
+          gap={12}
+          baseColor="#879a7e"
+          activeColor="#ff7e29"
+          proximity={120}
+          shockRadius={250}
+          shockStrength={3}
+          resistance={750}
+          returnDuration={1.5}
+        />
+      </div>
+
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-saffron-500/5 rounded-full blur-3xl animate-float" />

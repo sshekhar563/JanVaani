@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, Zap, Shield, Eye, BarChart3, Brain, CheckCircle2, 
+import {
+  ArrowRight, Zap, Shield, Eye, BarChart3, Brain, CheckCircle2,
   AlertTriangle, Clock, Users, TrendingUp, MapPin, Mic, Camera,
   ChevronRight, Star, ArrowUpRight
 } from 'lucide-react';
 import PipelineFlow from '../components/PipelineFlow';
 import Footer from '../components/Footer';
+import { DotGrid } from '../components/AnimatedBackground';
 
 function AnimatedCounter({ target, suffix = '', prefix = '' }) {
   const [count, setCount] = useState(0);
@@ -44,6 +45,21 @@ export default function LandingPage() {
     <div className="min-h-screen bg-navy-900 text-white overflow-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-16">
+        {/* DotGrid animated background */}
+        <div style={{ width: "100%", height: "100vh", position: "absolute", top: 0, left: 0, zIndex: 0, pointerEvents: 'none' }}>
+          <DotGrid
+            dotSize={2}
+            gap={12}
+            baseColor="#879a7e"
+            activeColor="#ff7e29"
+            proximity={120}
+            shockRadius={250}
+            shockStrength={3}
+            resistance={750}
+            returnDuration={1.5}
+          />
+        </div>
+
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-saffron-500/10 rounded-full blur-[120px] animate-pulse-slow" />
@@ -75,7 +91,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10 animate-slide-up animate-delay-200 leading-relaxed">
-              Transform scattered citizen grievances into structured, actionable intelligence. 
+              Transform scattered citizen grievances into structured, actionable intelligence.
               Connect leaders with real-time community needs through verified AI insights.
             </p>
 
@@ -97,10 +113,9 @@ export default function LandingPage() {
                 { value: 24, suffix: '/7', label: 'AI Monitoring', icon: Eye, color: 'navy' },
               ].map((stat, i) => (
                 <div key={i} className="stat-card flex flex-col items-center py-6">
-                  <stat.icon className={`w-6 h-6 mb-3 ${
-                    stat.color === 'saffron' ? 'text-saffron-400' : 
-                    stat.color === 'trust' ? 'text-trust-400' : 'text-blue-400'
-                  }`} />
+                  <stat.icon className={`w-6 h-6 mb-3 ${stat.color === 'saffron' ? 'text-saffron-400' :
+                      stat.color === 'trust' ? 'text-trust-400' : 'text-blue-400'
+                    }`} />
                   <div className="text-3xl font-bold text-white mb-1">
                     <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                   </div>
@@ -266,16 +281,14 @@ export default function LandingPage() {
               },
             ].map((feature, i) => (
               <div key={i} className="group relative">
-                <div className={`absolute -inset-0.5 rounded-2xl blur opacity-0 group-hover:opacity-40 transition-opacity duration-500 ${
-                  feature.color === 'saffron' ? 'bg-saffron-500/30' :
-                  feature.color === 'trust' ? 'bg-trust-500/30' : 'bg-blue-500/30'
-                }`} />
+                <div className={`absolute -inset-0.5 rounded-2xl blur opacity-0 group-hover:opacity-40 transition-opacity duration-500 ${feature.color === 'saffron' ? 'bg-saffron-500/30' :
+                    feature.color === 'trust' ? 'bg-trust-500/30' : 'bg-blue-500/30'
+                  }`} />
                 <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 h-full card-hover group-hover:border-white/20">
                   <div className="text-xs font-bold text-gray-600 mb-4">{feature.step}</div>
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    feature.color === 'saffron' ? 'bg-saffron-500/15 text-saffron-400' :
-                    feature.color === 'trust' ? 'bg-trust-500/15 text-trust-400' : 'bg-blue-500/15 text-blue-400'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${feature.color === 'saffron' ? 'bg-saffron-500/15 text-saffron-400' :
+                      feature.color === 'trust' ? 'bg-trust-500/15 text-trust-400' : 'bg-blue-500/15 text-blue-400'
+                    }`}>
                     <feature.icon className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
@@ -297,7 +310,7 @@ export default function LandingPage() {
                 Ready to Transform <span className="text-saffron-400">Governance</span>?
               </h2>
               <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-                Join the movement towards transparent, AI-powered public administration. 
+                Join the movement towards transparent, AI-powered public administration.
                 Every voice matters. Every action is verified.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
