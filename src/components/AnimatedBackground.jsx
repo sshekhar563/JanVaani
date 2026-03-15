@@ -168,7 +168,7 @@ const DotGrid = ({
 
   /* ---- pointer interactions ---- */
   useEffect(() => {
-    const ctx = gsap.context(() => {});
+    const ctx = gsap.context(() => { });
 
     const onMove = (e) => {
       const now = performance.now();
