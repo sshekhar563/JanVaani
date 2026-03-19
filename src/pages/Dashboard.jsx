@@ -50,6 +50,7 @@ function DashboardHeader() {
 }
 
 function OverviewView() {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <StatsCards />
@@ -97,6 +98,7 @@ function OverviewView() {
 }
 
 function AnalyticsView() {
+  const { t } = useTranslation();
   const { trend, trendLabels } = trustIndexData;
   const maxTrend = Math.max(...trend);
 
