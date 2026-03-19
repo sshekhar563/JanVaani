@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, Lock, Eye, EyeOff, Shield, ArrowRight, Smartphone } from 'lucide-react';
 import { DotGrid } from '../components/AnimatedBackground';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'otp'
+  const [loginMethod, setLoginMethod] = useState('email');
   const [formData, setFormData] = useState({
     emailOrPhone: '',
     password: '',
@@ -19,7 +21,6 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
     console.log('Login submitted:', formData);
   };
 
@@ -35,7 +36,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 pt-20 pb-10">
-      {/* DotGrid animated background */}
       <div style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <DotGrid
           dotSize={2}
@@ -50,7 +50,6 @@ export default function Login() {
         />
       </div>
 
-      {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-saffron-500/5 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-trust-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
@@ -66,11 +65,11 @@ export default function Login() {
             </div>
             <div>
               <span className="text-2xl font-bold text-white tracking-tight">Jan Vaani</span>
-              <span className="text-[10px] text-saffron-400 ml-1.5 font-medium uppercase tracking-wider">AI Governance</span>
+              <span className="text-[10px] text-saffron-400 ml-1.5 font-medium uppercase tracking-wider">{t('login.tagline')}</span>
             </div>
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Sign in to continue to Jan Vaani</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('login.welcomeBack')}</h1>
+          <p className="text-gray-400">{t('login.continueToJV')}</p>
         </div>
 
         {/* Login Card */}
@@ -86,7 +85,7 @@ export default function Login() {
               }`}
             >
               <Mail className="w-4 h-4" />
-              Email / Password
+              {t('login.emailTab')}
             </button>
             <button
               onClick={() => { setLoginMethod('otp'); setOtpSent(false); }}
@@ -97,18 +96,14 @@ export default function Login() {
               }`}
             >
               <Smartphone className="w-4 h-4" />
-              Phone OTP
+              {t('login.otpTab')}
             </button>
           </div>
 
           {loginMethod === 'email' ? (
-            /* Email / Password Login */
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email / Mobile */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Email or Mobile Number
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('login.emailLabel')}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Mail className="w-5 h-5 text-gray-500" />
@@ -118,18 +113,15 @@ export default function Login() {
                     name="emailOrPhone"
                     value={formData.emailOrPhone}
                     onChange={handleChange}
-                    placeholder="Enter email or mobile number"
+                    placeholder={t('login.emailPlaceholder')}
                     className="w-full pl-12 pr-4 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('login.passwordLabel')}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Lock className="w-5 h-5 text-gray-500" />
@@ -139,7 +131,7 @@ export default function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Enter your password"
+                    placeholder={t('login.passwordPlaceholder')}
                     className="w-full pl-12 pr-12 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
                     required
                   />
@@ -153,29 +145,23 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Forgot Password */}
               <div className="flex justify-end">
                 <button type="button" className="text-sm text-saffron-400 hover:text-saffron-300 font-medium transition-colors">
-                  Forgot Password?
+                  {t('login.forgotPassword')}
                 </button>
               </div>
 
-              {/* Login Button */}
               <button
                 type="submit"
                 className="w-full btn-primary flex items-center justify-center gap-2 text-base"
               >
-                Login <ArrowRight className="w-5 h-5" />
+                {t('login.loginBtn')} <ArrowRight className="w-5 h-5" />
               </button>
             </form>
           ) : (
-            /* Phone OTP Login */
             <form onSubmit={otpSent ? handleSubmit : handleSendOtp} className="space-y-5">
-              {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Mobile Number
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('login.mobileLabel')}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Phone className="w-5 h-5 text-gray-500" />
@@ -185,46 +171,42 @@ export default function Login() {
                     name="emailOrPhone"
                     value={formData.emailOrPhone}
                     onChange={handleChange}
-                    placeholder="+91 Enter mobile number"
+                    placeholder={t('login.mobilePlaceholder')}
                     className="w-full pl-12 pr-4 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
                     required
                   />
                 </div>
               </div>
 
-              {/* OTP Field (shown after OTP is sent) */}
               {otpSent && (
                 <div className="animate-fade-in">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Enter OTP
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('login.enterOtp')}</label>
                   <div className="flex gap-3">
                     <input
                       type="text"
                       name="otp"
                       value={formData.otp}
                       onChange={handleChange}
-                      placeholder="Enter 6-digit OTP"
+                      placeholder={t('login.otpPlaceholder')}
                       maxLength={6}
                       className="flex-1 px-4 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white text-center text-lg tracking-[0.5em] placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
                       required
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    Didn't receive OTP?{' '}
+                    {t('login.didntReceive')}{' '}
                     <button type="button" className="text-saffron-400 hover:text-saffron-300 font-medium">
-                      Resend
+                      {t('login.resend')}
                     </button>
                   </p>
                 </div>
               )}
 
-              {/* Send OTP / Verify Button */}
               <button
                 type="submit"
                 className="w-full btn-primary flex items-center justify-center gap-2 text-base"
               >
-                {otpSent ? 'Verify & Login' : 'Send OTP'} <ArrowRight className="w-5 h-5" />
+                {otpSent ? t('login.verifyLogin') : t('login.sendOtp')} <ArrowRight className="w-5 h-5" />
               </button>
             </form>
           )}
@@ -232,7 +214,7 @@ export default function Login() {
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-white/10" />
-            <span className="text-sm text-gray-500 font-medium">or</span>
+            <span className="text-sm text-gray-500 font-medium">{t('login.or')}</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
@@ -247,14 +229,14 @@ export default function Login() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            <span className="group-hover:translate-x-0.5 transition-transform duration-300">Continue with Google</span>
+            <span className="group-hover:translate-x-0.5 transition-transform duration-300">{t('login.continueGoogle')}</span>
           </button>
 
           {/* Sign Up Link */}
           <p className="text-center text-gray-400 mt-6">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link to="/signup" className="text-saffron-400 hover:text-saffron-300 font-semibold transition-colors">
-              Sign Up
+              {t('login.signUp')}
             </Link>
           </p>
         </div>

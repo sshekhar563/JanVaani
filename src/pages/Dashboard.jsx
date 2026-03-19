@@ -9,13 +9,15 @@ import {
   BarChart3, TrendingUp, Activity
 } from 'lucide-react';
 import { trustIndexData } from '../data/mockData';
+import { useTranslation } from 'react-i18next';
 
 function DashboardHeader() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 className="text-2xl font-bold text-white">Leadership War Room</h1>
-        <p className="text-sm text-gray-400 mt-1">Welcome back, District Collector - Last updated 2 min ago</p>
+        <h1 className="text-2xl font-bold text-white">{t('dashboard.warRoom')}</h1>
+        <p className="text-sm text-gray-400 mt-1">{t('dashboard.welcomeBack')}</p>
       </div>
       <div className="flex items-center gap-3">
         {/* Search */}
@@ -23,7 +25,7 @@ function DashboardHeader() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
-            placeholder="Search issues..."
+            placeholder={t('dashboard.searchPlaceholder')}
             className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 w-64"
           />
         </div>
@@ -39,7 +41,7 @@ function DashboardHeader() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-saffron-500 to-trust-500 flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm text-gray-300 hidden sm:block">Admin</span>
+          <span className="text-sm text-gray-300 hidden sm:block">{t('dashboard.admin')}</span>
           <ChevronDown className="w-3 h-3 text-gray-500 hidden sm:block" />
         </button>
       </div>
@@ -58,17 +60,17 @@ function OverviewView() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Activity className="w-5 h-5 text-saffron-400" />
-                Quick Insights
+                {t('dashboard.quickInsights')}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">AI-generated summary</p>
+              <p className="text-xs text-gray-500 mt-1">{t('dashboard.aiSummary')}</p>
             </div>
           </div>
           <div className="space-y-4">
             {[
-              { label: 'Critical Alert', desc: 'School building structural issue in Ward 7 requires immediate engineering assessment.', type: 'critical' },
-              { label: 'Misinformation', desc: 'Fake hospital closure message spreading on WhatsApp. Official rebuttal recommended.', type: 'warning' },
-              { label: 'Trending', desc: 'Water supply complaints up 40% in Sector 4 this week. Pipeline aging detected.', type: 'info' },
-              { label: 'Positive', desc: 'MG Road pothole repair completed. Citizen satisfaction score: 92%.', type: 'success' },
+              { label: t('dashboard.criticalAlert'), desc: t('dashboard.criticalDesc'), type: 'critical' },
+              { label: t('dashboard.misinformation'), desc: t('dashboard.misinfoDesc'), type: 'warning' },
+              { label: t('dashboard.trending'), desc: t('dashboard.trendingDesc'), type: 'info' },
+              { label: t('dashboard.positive'), desc: t('dashboard.positiveDesc'), type: 'success' },
             ].map((insight, i) => (
               <div key={i} className={`p-4 rounded-xl border ${
                 insight.type === 'critical' ? 'bg-red-500/5 border-red-500/20' :
@@ -108,9 +110,9 @@ function AnalyticsView() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-trust-400" />
-                Trust Score Trend
+                {t('dashboard.trustScoreTrend')}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">Last 6 months</p>
+              <p className="text-xs text-gray-500 mt-1">{t('dashboard.last6Months')}</p>
             </div>
           </div>
           {/* Simple bar chart */}
@@ -133,17 +135,17 @@ function AnalyticsView() {
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-saffron-400" />
-          Issue Category Distribution
+          {t('dashboard.categoryDistribution')}
         </h3>
         <div className="space-y-3">
           {[
-            { label: 'Roads & Infrastructure', count: 342, pct: 27 },
-            { label: 'Water & Sanitation', count: 287, pct: 23 },
-            { label: 'Electricity & Lighting', count: 198, pct: 16 },
-            { label: 'Sanitation & Waste', count: 156, pct: 13 },
-            { label: 'Education & Infrastructure', count: 124, pct: 10 },
-            { label: 'Healthcare', count: 89, pct: 7 },
-            { label: 'Other', count: 51, pct: 4 },
+            { label: t('dashboard.cat1'), count: 342, pct: 27 },
+            { label: t('dashboard.cat2'), count: 287, pct: 23 },
+            { label: t('dashboard.cat3'), count: 198, pct: 16 },
+            { label: t('dashboard.cat4'), count: 156, pct: 13 },
+            { label: t('dashboard.cat5'), count: 124, pct: 10 },
+            { label: t('dashboard.cat6'), count: 89, pct: 7 },
+            { label: t('dashboard.cat7'), count: 51, pct: 4 },
           ].map(cat => (
             <div key={cat.label} className="flex items-center gap-4">
               <span className="text-sm text-gray-300 w-48 flex-shrink-0 truncate">{cat.label}</span>
@@ -163,6 +165,7 @@ function AnalyticsView() {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [activeView, setActiveView] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 

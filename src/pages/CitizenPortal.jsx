@@ -7,8 +7,10 @@ import {
 import { categories, issues } from '../data/mockData';
 import PipelineFlow, { pipelineSteps } from '../components/PipelineFlow';
 import Footer from '../components/Footer';
+import { useTranslation } from 'react-i18next';
 
 function VoiceInput() {
+  const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
 
@@ -17,7 +19,7 @@ function VoiceInput() {
       setRecording(true);
       setTranscript('');
       setTimeout(() => {
-        setTranscript('???? ?? ???? ????? ??... ???? ??? ?? ?? ????? ?? ???... ???? ?????? ??...');
+        setTranscript('सड़क पर बहुत बड़ा गड्ढा है... MG रोड पर... बस स्टॉप के पास... बहुत खतरनाक...');
         setRecording(false);
       }, 4000);
     } else {
@@ -39,7 +41,7 @@ function VoiceInput() {
           <Mic className={`w-10 h-10 text-white ${recording ? 'animate-pulse' : ''}`} />
         </button>
         <p className="text-sm text-gray-400 mt-4">
-          {recording ? 'Listening... speak in any language' : 'Tap to start recording'}
+          {recording ? t('report.listening') : t('report.tapToRecord')}
         </p>
         
         {/* Waveform */}
@@ -53,7 +55,7 @@ function VoiceInput() {
 
         {/* Dialect selector */}
         <div className="mt-6 flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-500">Dialect:</span>
+          <span className="text-xs text-gray-500">{t('report.dialect')}</span>
           <div className="flex gap-2">
             {['Hindi', 'Haryanvi', 'Punjabi', 'Urdu', 'English'].map(d => (
               <button key={d} className="px-3 py-1 text-xs rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-saffron-500/30 transition-all">
@@ -69,11 +71,11 @@ function VoiceInput() {
         <div className="bg-trust-500/5 border border-trust-500/20 rounded-xl p-4 animate-fade-in">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-trust-400" />
-            <span className="text-xs font-medium text-trust-400">AI Transcription (Hindi to English)</span>
+            <span className="text-xs font-medium text-trust-400">{t('report.transcriptionLabel')}</span>
           </div>
           <p className="text-sm text-gray-300 italic mb-2">{transcript}</p>
           <p className="text-sm text-gray-400">
-            <span className="text-white font-medium">Translation:</span> "There is a big pothole on the road... on MG Road... near the bus stop... very dangerous..."
+            <span className="text-white font-medium">{t('report.translationLabel')}</span> "{t('report.translationText')}"
           </p>
         </div>
       )}
@@ -82,11 +84,12 @@ function VoiceInput() {
 }
 
 function TextInput({ formData, setFormData }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <textarea
         rows={5}
-        placeholder="Describe the issue in detail... (e.g., Large pothole on MG Road near the bus stop causing traffic issues)"
+        placeholder={t('report.textPlaceholder')}
         className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 text-sm resize-none focus:outline-none focus:border-saffron-500/50 focus:ring-1 focus:ring-saffron-500/20 transition-all"
         value={formData.description}
         onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -94,7 +97,7 @@ function TextInput({ formData, setFormData }) {
       <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex items-start gap-2">
         <Brain className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
         <p className="text-xs text-gray-400">
-          <span className="text-blue-400 font-medium">AI Assist:</span> Our NLP engine will automatically detect the category, location, and sentiment from your description.
+          <span className="text-blue-400 font-medium">{t('report.aiAssistLabel')}</span> {t('report.aiAssistText')}
         </p>
       </div>
     </div>
@@ -102,6 +105,7 @@ function TextInput({ formData, setFormData }) {
 }
 
 function ImageInput() {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState(null);
 
   return (
@@ -128,8 +132,8 @@ function ImageInput() {
             <div className="mt-3 bg-trust-500/5 border border-trust-500/20 rounded-lg p-3 flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-trust-400 mt-0.5" />
               <div>
-                <p className="text-xs text-trust-400 font-medium">AI Image Analysis</p>
-                <p className="text-xs text-gray-400">Detected: Road damage, pothole (~3ft diameter). Location metadata extracted.</p>
+                <p className="text-xs text-trust-400 font-medium">{t('report.aiImageAnalysis')}</p>
+                <p className="text-xs text-gray-400">{t('report.imageDetected')}</p>
               </div>
             </div>
           </div>
@@ -137,9 +141,9 @@ function ImageInput() {
           <>
             <Upload className="w-10 h-10 text-gray-600 mx-auto mb-3 group-hover:text-saffron-400 transition-colors" />
             <p className="text-sm text-gray-400">
-              <span className="text-saffron-400 font-medium">Click to upload</span> or drag and drop
+              <span className="text-saffron-400 font-medium">{t('report.clickToUpload')}</span> {t('report.orDragDrop')}
             </p>
-            <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP up to 10MB</p>
+            <p className="text-xs text-gray-500 mt-1">{t('report.uploadLimit')}</p>
           </>
         )}
       </div>
@@ -148,23 +152,24 @@ function ImageInput() {
 }
 
 function LiveTracker() {
+  const { t } = useTranslation();
   const sampleIssue = issues[0];
   const stepsData = [
-    { key: 'submitted', label: 'Submitted', icon: Send, time: 'Mar 8, 9:30 AM', done: true },
-    { key: 'ai_processing', label: 'AI Processing', icon: Brain, time: 'Mar 8, 9:31 AM', done: true },
-    { key: 'leader_dashboard', label: 'Leader Dashboard', icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
-    { key: 'action_taken', label: 'Action Taken', icon: Hammer, time: 'Mar 10, 2:00 PM', done: true },
-    { key: 'verified', label: 'Verified Proof', icon: ShieldCheck, time: 'Mar 10, 4:30 PM', done: false, active: true },
+    { key: 'submitted', label: t('report.stepSubmitted'), icon: Send, time: 'Mar 8, 9:30 AM', done: true },
+    { key: 'ai_processing', label: t('report.stepAiProcessing'), icon: Brain, time: 'Mar 8, 9:31 AM', done: true },
+    { key: 'leader_dashboard', label: t('report.stepLeaderDashboard'), icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
+    { key: 'action_taken', label: t('report.stepActionTaken'), icon: Hammer, time: 'Mar 10, 2:00 PM', done: true },
+    { key: 'verified', label: t('report.stepVerified'), icon: ShieldCheck, time: 'Mar 10, 4:30 PM', done: false, active: true },
   ];
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-bold text-white">Live Issue Tracker</h3>
-          <p className="text-xs text-gray-500 mt-1">Track ID: {sampleIssue.id}</p>
+          <h3 className="text-lg font-bold text-white">{t('report.liveTracker')}</h3>
+          <p className="text-xs text-gray-500 mt-1">{t('report.trackIdLabel')} {sampleIssue.id}</p>
         </div>
-        <span className="tag-high">High Priority</span>
+        <span className="tag-high">{t('report.highPriority')}</span>
       </div>
 
       <div className="bg-white/5 rounded-xl p-4 mb-6">
@@ -203,7 +208,7 @@ function LiveTracker() {
               {step.active && (
                 <div className="flex items-center gap-1.5 mt-2 text-xs text-saffron-400">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Awaiting final verification...
+                  {t('report.awaitingVerification')}
                 </div>
               )}
             </div>
@@ -215,6 +220,7 @@ function LiveTracker() {
 }
 
 export default function CitizenPortal() {
+  const { t } = useTranslation();
   const [inputMode, setInputMode] = useState('text');
   const [submitted, setSubmitted] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -257,46 +263,38 @@ export default function CitizenPortal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     startPipeline();
     setAnalysis(null);
-
     setLoadingAI(true);
 
     try {
       const res = await fetch("http://localhost:8000/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: formData.description,
           location: formData.location,
           category: formData.category,
         }),
       });
-
       const data = await res.json();
-
       setAnalysis({
         ...data,
         transcript: data.transcript ?? getTranscriptFallback(),
       });
       setSubmitted(true);
-
     } catch (err) {
       console.error("NLP analysis failed:", err);
     }
 
     setLoadingAI(false);
-
     setTimeout(() => setSubmitted(false), 5200);
   };
 
   const modes = [
-    { key: 'voice', label: 'Voice', icon: Mic },
-    { key: 'text', label: 'Text', icon: Type },
-    { key: 'image', label: 'Image', icon: Image },
+    { key: 'voice', label: t('report.voiceTab'), icon: Mic },
+    { key: 'text', label: t('report.textTab'), icon: Type },
+    { key: 'image', label: t('report.imageTab'), icon: Image },
   ];
 
   const transcriptPreview = analysis?.transcript ?? getTranscriptFallback();
@@ -307,13 +305,13 @@ export default function CitizenPortal() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-saffron-500/10 border border-saffron-500/20 text-xs font-medium text-saffron-400 mb-4">
-            <AlertCircle className="w-3 h-3" /> Citizen Intake Portal
+            <AlertCircle className="w-3 h-3" /> {t('report.portalBadge')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            Report a <span className="text-saffron-400">Community Issue</span>
+            {t('report.reportTitle')} <span className="text-saffron-400">{t('report.communityIssue')}</span>
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto">
-            Your voice matters. Report issues in your language, let AI handle the rest.
+            {t('report.reportSubtitle')}
           </p>
         </div>
 
@@ -323,7 +321,7 @@ export default function CitizenPortal() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Input Mode Tabs */}
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                <label className="text-sm font-medium text-gray-300 mb-3 block">Input Method</label>
+                <label className="text-sm font-medium text-gray-300 mb-3 block">{t('report.inputMethod')}</label>
                 <div className="flex gap-2 mb-6">
                   {modes.map(m => (
                     <button
@@ -341,7 +339,6 @@ export default function CitizenPortal() {
                   ))}
                 </div>
 
-                {/* Input Content */}
                 {inputMode === 'voice' && <VoiceInput />}
                 {inputMode === 'text' && <TextInput formData={formData} setFormData={setFormData} />}
                 {inputMode === 'image' && <ImageInput />}
@@ -350,14 +347,14 @@ export default function CitizenPortal() {
               {/* Category & Location */}
               <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">Category</label>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">{t('report.categoryLabel')}</label>
                   <div className="relative">
                     <select
                       className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm appearance-none focus:outline-none focus:border-saffron-500/50 transition-all cursor-pointer"
                       value={formData.category}
                       onChange={e => setFormData({ ...formData, category: e.target.value })}
                     >
-                      <option value="" className="bg-navy-900">Select a category</option>
+                      <option value="" className="bg-navy-900">{t('report.categoryPlaceholder')}</option>
                       {categories.map(c => (
                         <option key={c} value={c} className="bg-navy-900">{c}</option>
                       ))}
@@ -367,11 +364,11 @@ export default function CitizenPortal() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">Location</label>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">{t('report.locationLabel')}</label>
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="e.g., MG Road, Sector 12"
+                      placeholder={t('report.locationPlaceholder')}
                       className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pl-10 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 transition-all"
                       value={formData.location}
                       onChange={e => setFormData({ ...formData, location: e.target.value })}
@@ -389,17 +386,17 @@ export default function CitizenPortal() {
                 {loadingAI ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    AI Processing...
+                    {t('report.aiProcessing')}
                   </>
                 ) : submitted ? (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    Submitted Successfully!
+                    {t('report.submittedSuccess')}
                   </>
                 ) : (
                   <>
                     <Send className="w-5 h-5" />
-                    Submit Report
+                    {t('report.submitReport')}
                   </>
                 )}
               </button>
@@ -408,53 +405,42 @@ export default function CitizenPortal() {
                 <div className="bg-trust-500/10 border border-trust-500/20 rounded-xl p-4 flex items-start gap-3 animate-slide-up">
                   <CheckCircle2 className="w-5 h-5 text-trust-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-trust-400">Issue Reported Successfully!</p>
-                    <p className="text-xs text-gray-400 mt-1">Track ID: JV-2024-009. AI is analyzing your report...</p>
+                    <p className="text-sm font-medium text-trust-400">{t('report.issueReported')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('report.trackId')}</p>
                   </div>
                 </div>
               )}
+
               {analysis && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4 animate-fade-in">
-                  
                   <div className="flex items-center gap-2 mb-3">
                     <Brain className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-medium text-blue-400">
-                      AI Complaint Analysis
-                    </span>
+                    <span className="text-xs font-medium text-blue-400">{t('report.aiComplaintAnalysis')}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
-
                     <div>
-                      <span className="text-gray-500">Category</span>
+                      <span className="text-gray-500">{t('report.category')}</span>
                       <p className="text-white font-medium">{analysis.category}</p>
                     </div>
-
                     <div>
-                      <span className="text-gray-500">Sentiment</span>
+                      <span className="text-gray-500">{t('report.sentiment')}</span>
                       <p className="text-white font-medium">{analysis.sentiment}</p>
                     </div>
-
                     <div>
-                      <span className="text-gray-500">Urgency Score</span>
-                      <p className="text-white font-medium">
-                        {(analysis.urgency * 100).toFixed(0)}%
-                      </p>
+                      <span className="text-gray-500">{t('report.urgencyScore')}</span>
+                      <p className="text-white font-medium">{(analysis.urgency * 100).toFixed(0)}%</p>
                     </div>
-
                     <div>
-                      <span className="text-gray-500">Detected Location</span>
-                      <p className="text-white font-medium">
-                        {analysis.location || "Unknown"}
-                      </p>
+                      <span className="text-gray-500">{t('report.detectedLocation')}</span>
+                      <p className="text-white font-medium">{analysis.location || t('report.unknown')}</p>
                     </div>
-
                   </div>
+
                   <div className="mt-4 bg-navy-900/40 border border-white/5 rounded-2xl p-3">
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-gray-500 mb-1">Whisper transcript</p>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-gray-500 mb-1">{t('report.whisperTranscript')}</p>
                     <p className="text-sm text-gray-200 leading-relaxed break-words">{analysis.transcript}</p>
                   </div>
-
                 </div>
               )}
             </form>
@@ -465,13 +451,13 @@ export default function CitizenPortal() {
             <LiveTracker />
             <PipelineFlow
               activeIndex={pipelineStep}
-              badgeText={pipelineActive ? 'Live pipeline' : 'Pipeline snapshot'}
-              title="Reality Check Pipeline"
-              subtitle="Whisper → GPT → Leader action in one verified stream."
+              badgeText={pipelineActive ? t('report.pipelineBadgeLive') : t('report.pipelineBadgeSnapshot')}
+              title={t('report.pipelineTitle')}
+              subtitle={t('report.pipelineSubtitle')}
               extra={{
-                label: 'Whisper preview',
+                label: t('report.whisperPreview'),
                 value: transcriptPreview,
-                meta: pipelineActive ? 'Streaming with Whisper + GPT' : 'Awaiting next citizen intake',
+                meta: pipelineActive ? t('report.streamingLabel') : t('report.awaitingIntake'),
               }}
             />
           </div>

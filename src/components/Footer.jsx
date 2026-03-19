@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Shield, Github, Twitter, Mail, Heart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-navy-900 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -15,8 +18,7 @@ export default function Footer() {
               <span className="text-lg font-bold text-white">Jan Vaani</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-              AI-powered governance platform transforming citizen grievances into actionable intelligence. 
-              Building trust between leaders and communities through transparency and verified action.
+              {t('footer.tagline')}
             </p>
             <div className="flex gap-3 mt-5">
               <a href="#" className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all">
@@ -33,32 +35,32 @@ export default function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Platform</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('footer.platform')}</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/report" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Report an Issue</Link></li>
-              <li><Link to="/dashboard" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Leader Dashboard</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Track My Issue</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">API Documentation</a></li>
+              <li><Link to="/report" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.reportIssue')}</Link></li>
+              <li><Link to="/dashboard" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.leaderDashboard')}</Link></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.trackIssue')}</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.apiDocs')}</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Resources</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('footer.resources')}</h4>
             <ul className="space-y-2.5">
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">About Jan Vaani</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">Contact Support</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.aboutUs')}</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.privacy')}</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.terms')}</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.contactSupport')}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-gray-500 text-xs">
-            Copyright 2024 Jan Vaani. Made with <Heart className="inline w-3 h-3 text-red-400" /> for better governance.
+            {t('footer.copyright')} <Heart className="inline w-3 h-3 text-red-400" /> {t('footer.forGovernance')}
           </p>
           <p className="text-gray-500 text-xs">
-            Powered by AI - Built for India.
+            {t('footer.poweredBy')}
           </p>
         </div>
       </div>
