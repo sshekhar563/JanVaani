@@ -8,7 +8,7 @@ passlib[bcrypt]
 PyJWT
 python-multipart
 requests
-whisper
+openai-whisper
 transformers
 torchaudio
 

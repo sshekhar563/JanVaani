@@ -188,6 +188,7 @@ function VoiceInput({ onResult }) {
   const [recording, setRecording] = useState(false);
   const [status, setStatus] = useState('Tap to start recording');
   const [transcript, setTranscript] = useState('');
+  const [voicePhase, setVoicePhase] = useState('idle'); // idle | recording | uploading
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
@@ -203,12 +204,21 @@ function VoiceInput({ onResult }) {
   }, []);
 
   const sendRecording = async (blob) => {
-    setStatus('Uploading to Whisper...');
+    setStatus(t('report.processing', 'Uploading to Whisper...'));
+    setVoicePhase('Uploading');
+
     try {
-      const formData = new FormData();
-      formData.append('audio', blob, `complaint-${Date.now()}.webm`);
-      if (selectedLanguage && selectedLanguage !== 'auto') formData.append('language', selectedLanguage);
-      const response = await fetch('http://localhost:8000/voice-report', { method: 'POST', body: formData });
+        const formData = new FormData();
+        formData.append('audio', blob, `complaint-${Date.now()}.webm`);
+        if (selectedLanguage && selectedLanguage !== 'auto') {
+          formData.append('language', selectedLanguage);
+        }
+
+        const response = await fetch('http://localhost:8000/voice-report', {
+          method: 'POST',
+          body: formData,
+      });
+
       if (!response.ok) throw new Error('Whisper service failed');
       const data = await response.json();
       const transcriptText = data.transcript?.text ?? data.transcript ?? '';
@@ -216,7 +226,10 @@ function VoiceInput({ onResult }) {
       setStatus('Transcription ready');
       onResult?.({ transcript: { text: transcriptText, language: data.transcript?.language }, analysis: data.analysis });
     } catch (err) {
-      setStatus('Unable to transcribe.');
+      console.error(err);
+      setStatus(t('report.transcriptionFailed', 'Unable to transcribe.'));
+    } finally {
+      setVoicePhase('idle');
     }
   };
 
@@ -235,7 +248,8 @@ function VoiceInput({ onResult }) {
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
-      setStatus('Recording...');
+      setVoicePhase('Recording');
+      setStatus(t('report.listening', 'Recording...'));
       setTranscript('');
     } catch {
       setStatus('Microphone access denied.');
@@ -245,26 +259,27 @@ function VoiceInput({ onResult }) {
   const stopRecording = () => {
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
     setRecording(false);
-    setStatus('Processing...');
+    setStatus(t('report.processing', 'Processing...'));
+  };
+
+  const handleToggle = () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center py-8">
+      <div className="space-y-6">
+        <div className="text-center py-8">
         <button
-          onClick={recording ? stopRecording : startRecording}
-          style={{
-            width: 88, height: 88, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto',
-            background: recording
-              ? `linear-gradient(135deg, ${C.fire}, #8B1A1A)`
-              : `linear-gradient(135deg, ${C.amber}, ${C.primary})`,
-            boxShadow: recording
-              ? `0 0 0 8px rgba(212,46,24,0.15), 0 8px 24px rgba(212,46,24,0.3)`
-              : `0 0 0 8px rgba(232,130,10,0.12), 0 8px 24px rgba(196,68,10,0.2)`,
-            border: 'none', cursor: 'pointer', transition: 'all 0.3s',
-          }}
+          onClick={handleToggle}
+          className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 mx-auto ${
+            recording 
+              ? 'bg-red-500 shadow-xl shadow-red-500/40 scale-110 animate-pulse' 
+              : 'bg-gradient-to-br from-saffron-500 to-saffron-600 shadow-xl shadow-saffron-500/25 hover:shadow-saffron-500/40 hover:scale-105'
+          }`}
         >
           <Mic style={{ width: 32, height: 32, color: '#FDECC8' }} />
         </button>
@@ -299,8 +314,9 @@ function VoiceInput({ onResult }) {
               Transcription Ready
             </span>
           </div>
-          <p style={{ fontSize: '0.9rem', color: C.ink, fontFamily: 'Hind Siliguri, sans-serif', fontStyle: 'italic' }}>
-            {transcript}
+          <p className="text-sm text-brown-300 italic mb-2">{transcript}</p>
+          <p className="text-sm text-brown-400">
+            <span className="text-white font-medium">{t('report.translationLabel')}</span> "{t('report.translationText')}"
           </p>
         </HeritagePanel>
       )}
