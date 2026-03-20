@@ -35,5 +35,3 @@ env/
 .coverage
 htmlcov/
 temp/
-backend/uploads/
-data/
