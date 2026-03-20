@@ -278,8 +278,8 @@ export default function AnimatedBackground() {
       <DotGrid
         dotSize={14}
         gap={28}
-        baseColor="#1e3a5f"
-        activeColor="#f97316"
+        baseColor="#0D4A5C"
+        activeColor="#C4440A"
         proximity={120}
         speedTrigger={80}
         shockRadius={200}

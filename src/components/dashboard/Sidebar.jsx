@@ -10,7 +10,7 @@ export default function Sidebar({ activeView, setActiveView, collapsed, setColla
   ];
 
   return (
-    <aside className={`fixed left-0 top-16 bottom-0 bg-navy-900 border-r border-white/10 z-40 transition-all duration-300 ${
+    <aside className={`fixed left-0 top-16 bottom-0 bg-ink-900 border-r border-white/10 z-40 transition-all duration-300 ${
       collapsed ? 'w-[68px]' : 'w-[240px]'
     }`}>
       <div className="flex flex-col h-full py-4">

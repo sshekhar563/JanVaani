@@ -119,7 +119,7 @@ export default function PotholeDetectionCard({ result, imageUrl, onClose }) {
         {/* Priority */}
         <div className="bg-white/5 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <ShieldAlert className="w-3.5 h-3.5 text-saffron-400" />
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-[10px] uppercase tracking-wider text-gray-500">Priority</span>
           </div>
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${priority.bg} ${priority.border} border ${priority.text}`}>
@@ -130,7 +130,7 @@ export default function PotholeDetectionCard({ result, imageUrl, onClose }) {
         {/* Detections */}
         <div className="bg-white/5 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Camera className="w-3.5 h-3.5 text-trust-400" />
+            <Camera className="w-3.5 h-3.5 text-teal-400" />
             <span className="text-[10px] uppercase tracking-wider text-gray-500">Regions</span>
           </div>
           <p className="text-xl font-bold text-white">{(result.bounding_boxes || []).length}</p>
@@ -139,7 +139,7 @@ export default function PotholeDetectionCard({ result, imageUrl, onClose }) {
 
       {/* Image with bounding box overlay */}
       {imageUrl && (
-        <div className="relative rounded-xl overflow-hidden border border-white/10 bg-navy-900/50">
+        <div className="relative rounded-xl overflow-hidden border border-white/10 bg-ink-900/50">
           <img
             ref={imgRef}
             src={imageUrl}

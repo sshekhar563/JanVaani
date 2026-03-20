@@ -8,8 +8,161 @@ import { categories, issues } from '../data/mockData';
 import PipelineFlow from '../components/PipelineFlow';
 import { pipelineSteps } from '../data/pipelineSteps';
 import Footer from '../components/Footer';
-import PotholeDetectionCard from '../components/PotholeDetectionCard';
 import { useTranslation } from 'react-i18next';
+import gsap from 'gsap';
+
+/* ── Shared color tokens (new palette) ── */
+const C = {
+  primary:     '#C4440A',
+  amber:       '#E8820A',
+  gold:        '#F5B830',
+  teal:        '#1A7A8A',
+  tealDeep:    '#0D4A5C',
+  cyan:        '#2A9BAD',
+  fire:        '#D42E18',
+  bg:          '#FDECC8',
+  ink:         '#1A1208',
+  inkSoft:     '#3D2A18',
+  label:       '#1A1208',
+  placeholder: '#6B5A42',
+};
+
+/* ── Styled form input ── */
+function HeritageInput({ label, hiLabel, enLabel, icon: Icon, ...props }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      {(label || hiLabel) && (
+        <label style={{
+          display: 'block',
+          fontSize: 15,
+          fontWeight: 600,
+          color: focused ? C.amber : C.label,
+          marginBottom: 6,
+          fontFamily: 'Hind Siliguri, sans-serif',
+          transition: 'color 0.2s',
+        }}>
+          {label ? label : (
+            <>
+              <span className="hi-text">{hiLabel}</span>
+              <span className="en-text">{enLabel}</span>
+            </>
+          )}
+        </label>
+      )}
+      <div style={{ position: 'relative' }}>
+        {Icon && (
+          <Icon style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            width: 16, height: 16,
+            color: focused ? C.amber : C.placeholder,
+            transition: 'color 0.2s', pointerEvents: 'none',
+          }} />
+        )}
+        <input
+          {...props}
+          onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+          onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+          style={{
+            width: '100%',
+            paddingLeft: Icon ? 38 : 12,
+            paddingRight: 12,
+            paddingTop: 11,
+            paddingBottom: 11,
+            background: C.bg,
+            border: `1.5px solid ${focused ? C.amber : 'rgba(232,130,10,0.4)'}`,
+            borderRadius: 8,
+            color: C.ink,
+            fontFamily: 'Hind Siliguri, sans-serif',
+            fontSize: '0.9rem',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── Heritage select ── */
+function HeritageSelect({ label, hiLabel, enLabel, icon: Icon, children, value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      {(label || hiLabel) && (
+        <label style={{
+          display: 'block', fontSize: 15, fontWeight: 600,
+          color: focused ? C.amber : C.label,
+          marginBottom: 6, fontFamily: 'Hind Siliguri, sans-serif',
+          transition: 'color 0.2s',
+        }}>
+          {label ? label : (
+            <>
+              <span className="hi-text">{hiLabel}</span>
+              <span className="en-text">{enLabel}</span>
+            </>
+          )}
+        </label>
+      )}
+      <div style={{ position: 'relative' }}>
+        {Icon && (
+          <Icon style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            width: 16, height: 16, color: focused ? C.amber : C.placeholder,
+            pointerEvents: 'none',
+          }} />
+        )}
+        <select
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: '100%',
+            paddingLeft: Icon ? 38 : 12,
+            paddingRight: 36,
+            paddingTop: 11,
+            paddingBottom: 11,
+            background: C.bg,
+            border: `1.5px solid ${focused ? C.amber : 'rgba(232,130,10,0.4)'}`,
+            borderRadius: 8,
+            color: C.ink,
+            fontFamily: 'Hind Siliguri, sans-serif',
+            fontSize: '0.9rem',
+            outline: 'none',
+            appearance: 'none',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+          }}
+        >
+          {children}
+        </select>
+        <ChevronDown style={{
+          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+          width: 16, height: 16, color: C.placeholder, pointerEvents: 'none',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Heritage card panel ── */
+function HeritagePanel({ children, style, className }) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: C.bg,
+        border: `1.5px solid rgba(232,130,10,0.25)`,
+        borderRadius: 12,
+        boxShadow: '0 2px 16px rgba(196,68,10,0.06)',
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 const LANGUAGE_OPTIONS = [
   { label: 'Auto detect (Whisper)', value: 'auto' },
@@ -27,21 +180,13 @@ const LANGUAGE_OPTIONS = [
   { label: 'Haryanvi', value: 'Haryanvi' },
   { label: 'Rajasthani', value: 'Rajasthani' },
   { label: 'Bhojpuri', value: 'Bhojpuri' },
-  { label: 'Dogri', value: 'Dogri' },
-  { label: 'Assamese', value: 'Assamese' },
-  { label: 'Bodo', value: 'Bodo' },
-  { label: 'Manipuri', value: 'Manipuri' },
-  { label: 'Sindhi', value: 'Sindhi' },
-  { label: 'Sanskrit', value: 'Sanskrit' },
-  { label: 'Kashmiri', value: 'Kashmiri' },
-  { label: 'Santali', value: 'Santali' },
   { label: 'English', value: 'English' },
 ];
 
 function VoiceInput({ onResult }) {
   const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
-  const [status, setStatus] = useState(t('report.tapToRecord', 'Tap to start recording'));
+  const [status, setStatus] = useState('Tap to start recording');
   const [transcript, setTranscript] = useState('');
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -52,156 +197,112 @@ function VoiceInput({ onResult }) {
     streamRef.current = null;
   };
 
-  useEffect(() => {
-    return () => {
-      cleanupStream();
-      if (recorderRef.current?.state === 'recording') {
-        recorderRef.current.stop();
-      }
-    };
+  useEffect(() => () => {
+    cleanupStream();
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
   }, []);
 
   const sendRecording = async (blob) => {
-    setStatus(t('report.processing', 'Uploading to Whisper...'));
-
-      try {
-        const formData = new FormData();
-        formData.append('audio', blob, `complaint-${Date.now()}.webm`);
-        if (selectedLanguage && selectedLanguage !== 'auto') {
-          formData.append('language', selectedLanguage);
-        }
-
-        const response = await fetch('http://localhost:8000/voice-report', {
-          method: 'POST',
-          body: formData,
-      });
-
+    setStatus('Uploading to Whisper...');
+    try {
+      const formData = new FormData();
+      formData.append('audio', blob, `complaint-${Date.now()}.webm`);
+      if (selectedLanguage && selectedLanguage !== 'auto') formData.append('language', selectedLanguage);
+      const response = await fetch('http://localhost:8000/voice-report', { method: 'POST', body: formData });
       if (!response.ok) throw new Error('Whisper service failed');
-
       const data = await response.json();
       const transcriptText = data.transcript?.text ?? data.transcript ?? '';
       setTranscript(transcriptText);
-      setStatus(t('report.transcriptionReady', 'Transcription ready'));
-      onResult?.({
-        transcript: { text: transcriptText, language: data.transcript?.language },
-        analysis: data.analysis,
-      });
+      setStatus('Transcription ready');
+      onResult?.({ transcript: { text: transcriptText, language: data.transcript?.language }, analysis: data.analysis });
     } catch (err) {
-      console.error(err);
-      setStatus(t('report.transcriptionFailed', 'Unable to transcribe.'));
+      setStatus('Unable to transcribe.');
     }
   };
 
   const startRecording = async () => {
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setStatus(t('report.tapeNotSupported', 'Microphone access not supported.'));
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       const chunks = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
         cleanupStream();
-        if (!chunks.length) {
-          setStatus(t('report.noAudio', 'No audio captured.'));
-          return;
-        }
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        sendRecording(blob);
+        if (!chunks.length) { setStatus('No audio captured.'); return; }
+        sendRecording(new Blob(chunks, { type: 'audio/webm' }));
       };
-
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
-      setStatus(t('report.listening', 'Recording...'));
+      setStatus('Recording...');
       setTranscript('');
-    } catch (err) {
-      console.error(err);
-      setStatus(t('report.microphoneError', 'Microphone access denied.'));
+    } catch {
+      setStatus('Microphone access denied.');
     }
   };
 
   const stopRecording = () => {
-    if (recorderRef.current?.state === 'recording') {
-      recorderRef.current.stop();
-    }
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
     setRecording(false);
-    setStatus(t('report.processing', 'Processing...'));
-  };
-
-  const handleToggle = () => {
-    if (recording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    setStatus('Processing...');
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center py-8">
         <button
-          onClick={handleToggle}
-          className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 mx-auto ${
-            recording 
-              ? 'bg-red-500 shadow-xl shadow-red-500/40 scale-110 animate-pulse' 
-              : 'bg-gradient-to-br from-saffron-500 to-saffron-600 shadow-xl shadow-saffron-500/25 hover:shadow-saffron-500/40 hover:scale-105'
-          }`}
+          onClick={recording ? stopRecording : startRecording}
+          style={{
+            width: 88, height: 88, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto',
+            background: recording
+              ? `linear-gradient(135deg, ${C.fire}, #8B1A1A)`
+              : `linear-gradient(135deg, ${C.amber}, ${C.primary})`,
+            boxShadow: recording
+              ? `0 0 0 8px rgba(212,46,24,0.15), 0 8px 24px rgba(212,46,24,0.3)`
+              : `0 0 0 8px rgba(232,130,10,0.12), 0 8px 24px rgba(196,68,10,0.2)`,
+            border: 'none', cursor: 'pointer', transition: 'all 0.3s',
+          }}
         >
-          <Mic className={`w-10 h-10 text-white ${recording ? 'animate-pulse' : ''}`} />
+          <Mic style={{ width: 32, height: 32, color: '#FDECC8' }} />
         </button>
-        <p className="text-sm text-gray-400 mt-4">{status}</p>
-        
-        {/* Waveform */}
+        <p style={{ fontSize: '0.85rem', color: C.label, marginTop: 12, fontFamily: 'Hind Siliguri, sans-serif' }}>
+          {status}
+        </p>
+
         {recording && (
-          <div className="flex items-center justify-center gap-1 mt-4 h-10">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 12, height: 28 }}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="w-1.5 bg-saffron-400 rounded-full waveform-bar" style={{ height: '8px' }} />
+              <div key={i} style={{ width: 5, background: C.amber, borderRadius: 3, height: 8, animation: `waveform ${0.5 + i * 0.1}s ease-in-out infinite alternate` }} />
             ))}
           </div>
         )}
 
-        {/* Language selector */}
-        <div className="mt-6">
-          <p className="text-xs text-gray-500 uppercase tracking-[0.3em] text-center">{t('report.languageLabel', 'Language')}</p>
-          <div className="mt-2">
-            <select
-              className="w-full bg-navy-900/70 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-saffron-500/70 transition"
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-            >
-              {LANGUAGE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div style={{ marginTop: 20 }}>
+          <HeritageSelect
+            label="Language"
+            value={selectedLanguage}
+            onChange={e => setSelectedLanguage(e.target.value)}
+          >
+            {LANGUAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </HeritageSelect>
         </div>
       </div>
 
-      {/* Transcript Output */}
       {transcript && (
-        <div className="bg-trust-500/5 border border-trust-500/20 rounded-xl p-4 animate-fade-in">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-4 h-4 text-trust-400" />
-            <span className="text-xs font-medium text-trust-400">{t('report.transcriptionLabel')}</span>
+        <HeritagePanel style={{ padding: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <CheckCircle2 style={{ width: 16, height: 16, color: C.teal }} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: C.teal, fontFamily: 'Hind Siliguri, sans-serif' }}>
+              Transcription Ready
+            </span>
           </div>
-          <p className="text-sm text-gray-300 italic mb-2">{transcript}</p>
-          <p className="text-sm text-gray-400">
-            <span className="text-white font-medium">{t('report.translationLabel')}</span> "{t('report.translationText')}"
+          <p style={{ fontSize: '0.9rem', color: C.ink, fontFamily: 'Hind Siliguri, sans-serif', fontStyle: 'italic' }}>
+            {transcript}
           </p>
-        </div>
+        </HeritagePanel>
       )}
     </div>
   );
@@ -209,21 +310,49 @@ function VoiceInput({ onResult }) {
 
 function TextInput({ formData, setFormData }) {
   const { t } = useTranslation();
+  const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-4">
-      <textarea
-        rows={5}
-        placeholder={t('report.textPlaceholder')}
-        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 text-sm resize-none focus:outline-none focus:border-saffron-500/50 focus:ring-1 focus:ring-saffron-500/20 transition-all"
-        value={formData.description}
-        onChange={e => setFormData({ ...formData, description: e.target.value })}
-      />
-      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex items-start gap-2">
-        <Brain className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-gray-400">
-          <span className="text-blue-400 font-medium">{t('report.aiAssistLabel')}</span> {t('report.aiAssistText')}
-        </p>
+      <div>
+        <label style={{
+          display: 'block', fontSize: 15, fontWeight: 600,
+          color: focused ? C.amber : C.label,
+          marginBottom: 6, fontFamily: 'Hind Siliguri, sans-serif',
+        }}>
+          <span className="hi-text">विवरण</span>
+          <span className="en-text">Description</span>
+        </label>
+        <textarea
+          rows={5}
+          placeholder="Describe the issue in detail..."
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: C.bg,
+            border: `1.5px solid ${focused ? C.amber : 'rgba(232,130,10,0.4)'}`,
+            borderRadius: 8,
+            color: C.ink,
+            fontFamily: 'Hind Siliguri, sans-serif',
+            fontSize: '0.9rem',
+            lineHeight: 1.6,
+            resize: 'vertical',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+          }}
+          value={formData.description}
+          onChange={e => setFormData({ ...formData, description: e.target.value })}
+        />
       </div>
+      <HeritagePanel style={{ padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <Brain style={{ width: 16, height: 16, color: C.teal, marginTop: 2, flexShrink: 0 }} />
+        <p style={{ fontSize: '0.8rem', color: C.label, fontFamily: 'Hind Siliguri, sans-serif', margin: 0 }}>
+          <span style={{ fontWeight: 600, color: C.teal }}>AI Assist: </span>
+          <span className="hi-text">हमारा NLP इंजन श्रेणी, स्थान और भावना को स्वचालित रूप से पहचानेगा।</span>
+          <span className="en-text">Our NLP engine will auto-categorize, detect urgency, and extract location.</span>
+        </p>
+      </HeritagePanel>
     </div>
   );
 }
@@ -239,121 +368,95 @@ function ImageInput({ onDetectionResult }) {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Show local preview
     const localUrl = URL.createObjectURL(file);
     setPreview(localUrl);
     setDetecting(true);
     setDetectionResult(null);
-
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await fetch('/api/detect-pothole', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/detect-pothole', { method: 'POST', body: fd });
       if (res.ok) {
         const data = await res.json();
         setDetectionResult(data);
-        // Use server URL for the saved image (supports bounding box scaling)
         setImageUrl(data.image_url || localUrl);
-        if (onDetectionResult) onDetectionResult(data);
-      } else {
-        // Fallback mock result
-        const fallback = {
-          detected: true,
-          confidence: 0.82,
-          priority: 'HIGH',
-          label: 'Pothole Detected',
-          bounding_boxes: [[180, 320, 420, 480]],
-          image_width: 720,
-          image_height: 720,
-          original_filename: file.name,
-        };
-        setDetectionResult(fallback);
-        setImageUrl(localUrl);
-        if (onDetectionResult) onDetectionResult(fallback);
-      }
-    } catch (err) {
-      console.warn('Detection API unavailable, using fallback:', err);
-      const fallback = {
-        detected: true,
-        confidence: 0.78,
-        priority: 'HIGH',
-        label: 'Pothole Detected',
-        bounding_boxes: [[200, 350, 440, 500]],
-        image_width: 720,
-        image_height: 720,
-        original_filename: file.name,
-      };
+        onDetectionResult?.(data);
+      } else throw new Error();
+    } catch {
+      const fallback = { detected: true, confidence: 0.82, priority: 'HIGH', label: 'Pothole Detected', bounding_boxes: [[180, 320, 420, 480]], image_width: 720, image_height: 720, original_filename: file.name };
       setDetectionResult(fallback);
       setImageUrl(localUrl);
-      if (onDetectionResult) onDetectionResult(fallback);
+      onDetectionResult?.(fallback);
     } finally {
       setDetecting(false);
     }
   };
 
   const clearImage = () => {
-    setPreview(null);
-    setDetectionResult(null);
-    setImageUrl(null);
+    setPreview(null); setDetectionResult(null); setImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    if (onDetectionResult) onDetectionResult(null);
+    onDetectionResult?.(null);
   };
 
   return (
     <div className="space-y-4">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-        id="pothole-image-upload"
-      />
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="pothole-image-upload" />
 
       {!preview && (
         <label
           htmlFor="pothole-image-upload"
-          className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-saffron-500/30 transition-all cursor-pointer group block"
+          style={{
+            display: 'block',
+            border: `2px dashed rgba(232,130,10,0.4)`,
+            borderRadius: 10,
+            padding: '2rem',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            background: C.bg,
+          }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = C.amber}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(232,130,10,0.4)'}
         >
-          <Upload className="w-10 h-10 text-gray-600 mx-auto mb-3 group-hover:text-saffron-400 transition-colors" />
-          <p className="text-sm text-gray-400">
-            <span className="text-saffron-400 font-medium">{t('report.clickToUpload')}</span> {t('report.orDragDrop')}
+          <Upload style={{ width: 36, height: 36, color: C.placeholder, margin: '0 auto 12px' }} />
+          <p style={{ fontSize: '0.9rem', color: C.label, fontFamily: 'Hind Siliguri, sans-serif', margin: '0 0 4px' }}>
+            <span style={{ color: C.amber, fontWeight: 600 }}>
+              <span className="hi-text">फ़ोटो अपलोड करें</span>
+              <span className="en-text">Upload Photo</span>
+            </span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">{t('report.uploadLimit')}</p>
-          <p className="text-xs text-blue-400 mt-2 font-medium">🔍 AI will automatically detect potholes</p>
+          <p style={{ fontSize: '0.8rem', color: C.placeholder, fontFamily: 'Hind Siliguri, sans-serif', margin: '0 0 8px' }}>
+            JPG, PNG up to 10MB
+          </p>
         </label>
       )}
 
       {detecting && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6 text-center animate-pulse">
-          <Loader2 className="w-8 h-8 text-blue-400 mx-auto mb-3 animate-spin" />
-          <p className="text-sm text-blue-400 font-medium">Analyzing road image...</p>
-          <p className="text-xs text-gray-500 mt-1">AI is detecting potholes and road damage</p>
-        </div>
+        <HeritagePanel style={{ padding: '1.5rem', textAlign: 'center' }}>
+          <Loader2 style={{ width: 32, height: 32, color: C.teal, margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
+          <p style={{ fontSize: '0.9rem', fontWeight: 600, color: C.teal, margin: '0 0 4px', fontFamily: 'Hind Siliguri, sans-serif' }}>
+            Analyzing road image...
+          </p>
+        </HeritagePanel>
       )}
 
       {preview && !detecting && (
-        <div className="relative animate-fade-in">
-          <button
-            onClick={clearImage}
-            className="absolute top-2 right-2 z-10 w-7 h-7 bg-navy-900/80 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
+        <div style={{ position: 'relative' }}>
+          <button onClick={clearImage} style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 10,
+            width: 28, height: 28, borderRadius: '50%',
+            background: 'rgba(26,18,8,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: 'none', cursor: 'pointer', color: '#FDECC8',
+          }}>
+            <X style={{ width: 14, height: 14 }} />
           </button>
-
-          {detectionResult ? (
-            <PotholeDetectionCard result={detectionResult} imageUrl={imageUrl} />
-          ) : (
-            <div className="w-full rounded-xl overflow-hidden border border-white/10">
-              <img src={preview} alt="Uploaded" className="w-full h-auto" />
-            </div>
-          )}
+          {detectionResult
+            ? <PotholeDetectionCard result={detectionResult} imageUrl={imageUrl} />
+            : <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid rgba(232,130,10,0.25)` }}>
+                <img src={preview} alt="Uploaded" style={{ width: '100%', height: 'auto' }} />
+              </div>
+          }
         </div>
       )}
     </div>
@@ -364,67 +467,100 @@ function LiveTracker() {
   const { t } = useTranslation();
   const sampleIssue = issues[0];
   const stepsData = [
-    { key: 'submitted', label: t('report.stepSubmitted'), icon: Send, time: 'Mar 8, 9:30 AM', done: true },
-    { key: 'ai_processing', label: t('report.stepAiProcessing'), icon: Brain, time: 'Mar 8, 9:31 AM', done: true },
-    { key: 'administration_dashboard', label: t('report.stepAdministrationDashboard'), icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
-    { key: 'action_taken', label: t('report.stepActionTaken'), icon: Hammer, time: 'Mar 10, 2:00 PM', done: true },
-    { key: 'verified', label: t('report.stepVerified'), icon: ShieldCheck, time: 'Mar 10, 4:30 PM', done: false, active: true },
+    { key: 'submitted',  hiLabel: 'सबमिट किया', enLabel: 'Submitted', icon: Send, time: 'Mar 8, 9:30 AM',  done: true },
+    { key: 'ai',        hiLabel: 'AI प्रोसेसिंग', enLabel: 'AI Processing', icon: Brain, time: 'Mar 8, 9:31 AM', done: true },
+    { key: 'dashboard', hiLabel: 'प्रशासन डैशबोर्ड', enLabel: 'Admin Dashboard', icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
+    { key: 'action',    hiLabel: 'कार्रवाई की', enLabel: 'Action Taken', icon: Hammer, time: 'Mar 10, 2:00 PM', done: true },
+    { key: 'verified',  hiLabel: 'सत्यापित प्रमाण', enLabel: 'Verified Proof', icon: ShieldCheck, time: 'Mar 10, 4:30 PM', done: false, active: true },
   ];
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8">
-      <div className="flex items-center justify-between mb-6">
+    <HeritagePanel style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h3 className="text-lg font-bold text-white">{t('report.liveTracker')}</h3>
-          <p className="text-xs text-gray-500 mt-1">{t('report.trackIdLabel')} {sampleIssue.id}</p>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: C.primary, margin: 0, fontFamily: "'Playfair Display', serif" }}>
+            <span className="hi-text">लाइव ट्रैकर</span>
+            <span className="en-text">Live Tracker</span>
+          </h3>
+          <p style={{ fontSize: '0.75rem', color: C.placeholder, marginTop: 4, fontFamily: 'Hind Siliguri, sans-serif' }}>
+            Issue ID: {sampleIssue.id}
+          </p>
         </div>
-        <span className="tag-high">{t('report.highPriority')}</span>
+        <span style={{
+          fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px',
+          background: 'rgba(212,46,24,0.08)', border: `1px solid rgba(212,46,24,0.25)`,
+          color: C.fire, borderRadius: 20, fontFamily: 'Hind Siliguri, sans-serif',
+        }}>
+          <span className="hi-text">उच्च प्राथमिकता</span>
+          <span className="en-text">High Priority</span>
+        </span>
       </div>
 
-      <div className="bg-white/5 rounded-xl p-4 mb-6">
-        <h4 className="font-semibold text-white text-sm mb-1">{sampleIssue.title}</h4>
-        <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{sampleIssue.location}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Mar 8, 2024</span>
+      <div style={{
+        background: 'rgba(232,130,10,0.05)', borderRadius: 8,
+        padding: '10px 14px', marginBottom: 20,
+        border: '1px solid rgba(232,130,10,0.15)',
+      }}>
+        <h4 style={{ fontWeight: 600, color: C.ink, fontSize: '0.9rem', margin: '0 0 4px', fontFamily: 'Hind Siliguri, sans-serif' }}>
+          {sampleIssue.title}
+        </h4>
+        <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: C.placeholder, fontFamily: 'Hind Siliguri, sans-serif' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin style={{ width: 12, height: 12 }} />{sampleIssue.location}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Clock style={{ width: 12, height: 12 }} />Mar 8, 2024
+          </span>
         </div>
       </div>
 
-      {/* Timeline */}
-      <div className="space-y-0">
-        {stepsData.map((step, i) => (
-          <div key={step.key} className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                step.done ? 'bg-trust-500 shadow-lg shadow-trust-500/25' :
-                step.active ? 'bg-saffron-500 shadow-lg shadow-saffron-500/25 animate-pulse' :
-                'bg-white/10'
-              }`}>
-                {step.done ? (
-                  <CheckCircle2 className="w-5 h-5 text-white" />
-                ) : (
-                  <step.icon className={`w-5 h-5 ${step.active ? 'text-white' : 'text-gray-500'}`} />
+      <div>
+        {stepsData.map((step, i) => {
+          const sColor = step.done ? C.teal : step.active ? C.amber : '#d1c5b8';
+          return (
+            <div key={step.key} style={{ display: 'flex', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  background: step.done ? C.teal : step.active ? C.amber : 'rgba(232,130,10,0.1)',
+                  border: `2px solid ${sColor}`,
+                  boxShadow: step.active ? `0 0 0 4px rgba(232,130,10,0.15)` : 'none',
+                }}>
+                  {step.done
+                    ? <CheckCircle2 style={{ width: 18, height: 18, color: '#fff' }} />
+                    : <step.icon style={{ width: 16, height: 16, color: step.active ? '#fff' : sColor }} />
+                  }
+                </div>
+                {i < stepsData.length - 1 && (
+                  <div style={{ width: 2, height: 36, background: step.done ? `${C.teal}50` : 'rgba(232,130,10,0.15)' }} />
                 )}
               </div>
-              {i < stepsData.length - 1 && (
-                <div className={`w-0.5 h-12 ${step.done ? 'bg-trust-500/40' : 'bg-white/10'}`} />
-              )}
+              <div style={{ paddingBottom: 28 }}>
+                <p style={{
+                  fontWeight: 600, fontSize: '0.88rem',
+                  color: step.done ? C.ink : step.active ? C.amber : C.placeholder,
+                  margin: '4px 0 0', fontFamily: 'Hind Siliguri, sans-serif',
+                }}>
+                  <span className="hi-text">{step.hiLabel}</span>
+                  <span className="en-text">{step.enLabel}</span>
+                </p>
+                <p style={{ fontSize: '0.75rem', color: C.placeholder, margin: '2px 0', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                  {step.time}
+                </p>
+                {step.active && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: '0.75rem', color: C.amber, fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <Loader2 style={{ width: 12, height: 12 }} />
+                    <span className="hi-text">सत्यापन की प्रतीक्षा...</span>
+                    <span className="en-text">Awaiting verification...</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="pb-8">
-              <p className={`font-medium text-sm ${step.done ? 'text-white' : step.active ? 'text-saffron-400' : 'text-gray-500'}`}>
-                {step.label}
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">{step.time}</p>
-              {step.active && (
-                <div className="flex items-center gap-1.5 mt-2 text-xs text-saffron-400">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  {t('report.awaitingVerification')}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
+    </HeritagePanel>
   );
 }
 
@@ -435,25 +571,33 @@ export default function CitizenPortal() {
   const [analysis, setAnalysis] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);
   const [formFeedback, setFormFeedback] = useState('');
-  const [formData, setFormData] = useState({
-    category: '',
-    location: '',
-    description: '',
-  });
+  const [formData, setFormData] = useState({ category: '', location: '', description: '' });
   const [pipelineStep, setPipelineStep] = useState(-1);
   const [pipelineActive, setPipelineActive] = useState(false);
   const [detectionResult, setDetectionResult] = useState(null);
   const pipelineTimers = useRef([]);
+  const submitBtnRef = useRef(null);
 
+  // GSAP submit button
   useEffect(() => {
-    return () => pipelineTimers.current.forEach(clearTimeout);
+    const btn = submitBtnRef.current;
+    if (!btn) return;
+    const onEnter = () => gsap.to(btn, { scale: 1.03, duration: 0.2, ease: 'power2.out' });
+    const onLeave = () => gsap.to(btn, { scale: 1, duration: 0.2, ease: 'power2.out' });
+    btn.addEventListener('mouseenter', onEnter);
+    btn.addEventListener('mouseleave', onLeave);
+    return () => {
+      btn.removeEventListener('mouseenter', onEnter);
+      btn.removeEventListener('mouseleave', onLeave);
+    };
   }, []);
 
-  const getTranscriptFallback = () => (
+  useEffect(() => () => pipelineTimers.current.forEach(clearTimeout), []);
+
+  const getTranscriptFallback = () =>
     inputMode === 'voice'
-      ? 'Whisper transcribed a Hindi (Haryanvi) plea about MG Road pothole with high urgency.'
-      : formData.description || 'Citizen text ready for NLP analysis.'
-  );
+      ? 'Whisper transcribed a Hindi plea about MG Road pothole with high urgency.'
+      : formData.description || 'Citizen text ready for NLP analysis.';
 
   const startPipeline = () => {
     pipelineTimers.current.forEach(clearTimeout);
@@ -461,301 +605,318 @@ export default function CitizenPortal() {
     setPipelineActive(true);
     setPipelineStep(-1);
     pipelineSteps.forEach((_, idx) => {
-      pipelineTimers.current.push(
-        setTimeout(() => {
-          setPipelineStep(idx);
-        }, idx * 900)
-      );
+      pipelineTimers.current.push(setTimeout(() => setPipelineStep(idx), idx * 900));
     });
-    pipelineTimers.current.push(
-      setTimeout(() => setPipelineActive(false), pipelineSteps.length * 900 + 600)
-    );
+    pipelineTimers.current.push(setTimeout(() => setPipelineActive(false), pipelineSteps.length * 900 + 600));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedText = (formData.description || '').trim();
-    if (!trimmedText) {
-      setFormFeedback(t('report.textRequired', 'Please enter a description before submitting.'));
-      return;
-    }
-
+    if (!trimmedText) { setFormFeedback('Please enter a description before submitting.'); return; }
     setFormFeedback('');
     startPipeline();
     setAnalysis(null);
     setLoadingAI(true);
-
-    let finalAnalysis = null;
-    let finalTranscript = getTranscriptFallback();
-
+    let finalAnalysis = null, finalTranscript = getTranscriptFallback();
     try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: trimmedText,
-          location: formData.location,
-          category: formData.category,
-        }),
+      const res = await fetch('/api/analyze', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: trimmedText, location: formData.location, category: formData.category }),
       });
       const data = await res.json();
-      const transcriptText = data.transcript ?? trimmedText ?? getTranscriptFallback();
-      const aiAnalysis = data.analysis ?? data;
-      finalAnalysis = aiAnalysis;
-      finalTranscript = transcriptText;
-    } catch (err) {
-      console.warn("Backend unavailable, using fallback analysis:", err);
-      // Graceful fallback with realistic mock results
-      finalAnalysis = {
-        sentiment: "NEGATIVE",
-        category: formData.category || "general",
-        location: formData.location || null,
-        urgency: 0.75,
-      };
+      finalAnalysis = data.analysis ?? data;
+      finalTranscript = data.transcript ?? trimmedText ?? getTranscriptFallback();
+    } catch {
+      finalAnalysis = { sentiment: 'NEGATIVE', category: formData.category || 'general', location: formData.location || null, urgency: 0.75 };
     }
-
-    setAnalysis({
-      ...finalAnalysis,
-      transcript: finalTranscript,
-    });
-
-    // Save pothole report if detection was done
-    if (detectionResult && detectionResult.detected) {
-      try {
-        await fetch('/api/pothole-reports', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            description: formData.description,
-            location: formData.location || finalAnalysis.location || '',
-            category: 'road',
-            image_url: detectionResult.image_url || '',
-            original_filename: detectionResult.original_filename || '',
-            detection_result: detectionResult,
-          })
-        });
-      } catch (err) {
-        console.warn("Failed to save pothole report:", err);
-      }
+    setAnalysis({ ...finalAnalysis, transcript: finalTranscript });
+    if (detectionResult?.detected) {
+      try { await fetch('/api/pothole-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description: formData.description, location: formData.location, category: 'road', image_url: detectionResult.image_url || '', original_filename: detectionResult.original_filename || '', detection_result: detectionResult }) }); } catch {}
     }
-
-    // Save complaint to MongoDB
-    try {
-      await fetch('/api/complaints', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: formData.description,
-          location: formData.location || finalAnalysis.location || '',
-          category: formData.category || finalAnalysis.category || 'general',
-          analysis: finalAnalysis
-        })
-      });
-    } catch (err) {
-      console.warn("Failed to save complaint:", err);
-    }
-
+    try { await fetch('/api/complaints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description: formData.description, location: formData.location, category: formData.category || finalAnalysis.category || 'general', analysis: finalAnalysis }) }); } catch {}
     setSubmitted(true);
     setLoadingAI(false);
+
+    // GSAP success animation
+    if (submitBtnRef.current) {
+      gsap.fromTo(submitBtnRef.current, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)' });
+    }
+
     setTimeout(() => setSubmitted(false), 5200);
   };
 
   const handleVoiceResult = (payload) => {
     if (!payload?.analysis) return;
     const transcriptText = payload.transcript?.text ?? payload.transcript ?? '';
-    setFormData((prev) => ({
-      ...prev,
-      description: transcriptText,
-      location: payload.analysis.location ?? prev.location,
-      category: payload.analysis.category ?? prev.category,
-    }));
-    setAnalysis({
-      ...payload.analysis,
-      transcript: transcriptText,
-    });
+    setFormData(prev => ({ ...prev, description: transcriptText, location: payload.analysis.location ?? prev.location, category: payload.analysis.category ?? prev.category }));
+    setAnalysis({ ...payload.analysis, transcript: transcriptText });
     setSubmitted(true);
     startPipeline();
     setTimeout(() => setSubmitted(false), 5200);
   };
 
   const modes = [
-    { key: 'voice', label: t('report.voiceTab'), icon: Mic },
-    { key: 'text', label: t('report.textTab'), icon: Type },
-    { key: 'image', label: t('report.imageTab'), icon: Image },
+    { key: 'voice', hiLabel: 'आवाज़', enLabel: 'Voice', icon: Mic },
+    { key: 'text',  hiLabel: 'टेक्स्ट', enLabel: 'Text',  icon: Type },
+    { key: 'image', hiLabel: 'छवि', enLabel: 'Image', icon: Image },
   ];
 
   const transcriptPreview = analysis?.transcript ?? getTranscriptFallback();
 
   return (
-    <div className="min-h-screen bg-navy-900 text-white pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-saffron-500/10 border border-saffron-500/20 text-xs font-medium text-saffron-400 mb-4">
-            <AlertCircle className="w-3 h-3" /> {t('report.portalBadge')}
+    <div
+      className="min-h-screen pt-20"
+      style={{ background: 'var(--color-bg)', color: C.ink }}
+    >
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+          {/* ── Page Header ── */}
+          <div className="text-center mb-12">
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '6px 16px', borderRadius: 20,
+              background: 'rgba(196,68,10,0.07)',
+              border: '1px solid rgba(196,68,10,0.2)',
+              marginBottom: 16,
+            }}>
+              <AlertCircle style={{ width: 14, height: 14, color: C.primary }} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: C.primary, fontFamily: 'Hind Siliguri, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <span className="hi-text">नागरिक शिकायत पोर्टल</span>
+                <span className="en-text">Citizen Grievance Portal</span>
+              </span>
+            </div>
+
+            <h1 style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              fontWeight: 700,
+              color: C.primary,
+              marginBottom: '0.75rem',
+            }}>
+              <span className="hi-text">शिकायत दर्ज करें</span>
+              <span className="en-text">File Your Grievance</span>
+            </h1>
+            <p style={{ color: C.inkSoft, maxWidth: '36rem', margin: '0 auto', fontFamily: 'Hind Siliguri, sans-serif', fontSize: '1rem', lineHeight: 1.65 }}>
+              <span className="hi-text">अपनी भाषा में समस्याएं बताएं, बाकी AI संभालेगा।</span>
+              <span className="en-text">Raise your voice for roads, water, sanitation — anything that needs attention.</span>
+            </p>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 }}>
+              <div style={{ height: 1, width: 60, background: 'rgba(232,130,10,0.35)' }}/>
+              <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1 L15 8 L8 15 L1 8 Z" fill="none" stroke="#E8820A" strokeWidth="1.2" opacity="0.5"/></svg>
+              <div style={{ height: 1, width: 60, background: 'rgba(232,130,10,0.35)' }}/>
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            {t('report.reportTitle')} <span className="text-saffron-400">{t('report.communityIssue')}</span>
-          </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
-            {t('report.reportSubtitle')}
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* Form Section */}
-          <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Input Mode Tabs */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                <label className="text-sm font-medium text-gray-300 mb-3 block">{t('report.inputMethod')}</label>
-                <div className="flex gap-2 mb-6">
-                  {modes.map(m => (
-                    <button
-                      type="button"
-                      key={m.key}
-                      onClick={() => setInputMode(m.key)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                        inputMode === m.key
-                          ? 'bg-gradient-to-r from-saffron-500/20 to-saffron-600/10 text-saffron-400 border border-saffron-500/30'
-                          : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <m.icon className="w-4 h-4" /> {m.label}
-                    </button>
-                  ))}
-                </div>
+          <div className="grid lg:grid-cols-5 gap-8">
+            {/* ── Form ── */}
+            <div className="lg:col-span-3">
+              <form onSubmit={handleSubmit} className="space-y-6">
 
-                {inputMode === 'voice' && <VoiceInput onResult={handleVoiceResult} />}
-                {inputMode === 'text' && <TextInput formData={formData} setFormData={setFormData} />}
-                {inputMode === 'image' && <ImageInput onDetectionResult={setDetectionResult} />}
-              </div>
+                {/* Input mode tabs + content */}
+                <HeritagePanel style={{ padding: '1.5rem' }}>
+                  <label style={{ display: 'block', fontSize: 15, fontWeight: 600, color: C.label, marginBottom: 10, fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <span className="hi-text">इनपुट विधि</span>
+                    <span className="en-text">Input Method</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                    {modes.map(m => (
+                      <button
+                        type="button"
+                        key={m.key}
+                        onClick={() => setInputMode(m.key)}
+                        style={{
+                          flex: 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          padding: '10px',
+                          borderRadius: 8,
+                          fontSize: '0.85rem', fontWeight: 600,
+                          fontFamily: 'Hind Siliguri, sans-serif',
+                          cursor: 'pointer',
+                          transition: 'all 0.25s',
+                          background: inputMode === m.key
+                            ? `linear-gradient(135deg, ${C.primary}, #a3370a)`
+                            : 'rgba(196,68,10,0.05)',
+                          color: inputMode === m.key ? '#FDECC8' : C.label,
+                          border: inputMode === m.key
+                            ? `1.5px solid ${C.primary}`
+                            : '1.5px solid rgba(196,68,10,0.15)',
+                          boxShadow: inputMode === m.key ? `0 4px 14px rgba(196,68,10,0.2)` : 'none',
+                        }}
+                      >
+                        <m.icon style={{ width: 16, height: 16 }} />
+                        <span className="hi-text">{m.hiLabel}</span>
+                        <span className="en-text">{m.enLabel}</span>
+                      </button>
+                    ))}
+                  </div>
 
-              {/* Category & Location */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">{t('report.categoryLabel')}</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm appearance-none focus:outline-none focus:border-saffron-500/50 transition-all cursor-pointer"
+                  {inputMode === 'voice' && <VoiceInput onResult={handleVoiceResult} />}
+                  {inputMode === 'text'  && <TextInput formData={formData} setFormData={setFormData} />}
+                  {inputMode === 'image' && <ImageInput onDetectionResult={setDetectionResult} />}
+                </HeritagePanel>
+
+                {/* Category & Location */}
+                <HeritagePanel style={{ padding: '1.5rem' }}>
+                  <div className="space-y-5">
+                    <HeritageSelect
+                      hiLabel="शिकायत का प्रकार"
+                      enLabel="Type of Issue"
+                      icon={ChevronDown}
                       value={formData.category}
                       onChange={e => setFormData({ ...formData, category: e.target.value })}
                     >
-                      <option value="" className="bg-navy-900">{t('report.categoryPlaceholder')}</option>
+                      <option value="" style={{ color: C.placeholder }}>Select...</option>
                       {categories.map(c => (
-                        <option key={c} value={c} className="bg-navy-900">{c}</option>
+                        <option key={c} value={c} style={{ color: C.ink, background: C.bg }}>{c}</option>
                       ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                  </div>
-                </div>
+                    </HeritageSelect>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">{t('report.locationLabel')}</label>
-                  <div className="relative">
-                    <input
+                    <HeritageInput
+                      hiLabel="जिला"
+                      enLabel="District"
+                      icon={MapPin}
                       type="text"
-                      placeholder={t('report.locationPlaceholder')}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pl-10 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 transition-all"
+                      placeholder="e.g. MG Road, Sector 9, Gurgaon"
                       value={formData.location}
                       onChange={e => setFormData({ ...formData, location: e.target.value })}
                     />
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   </div>
-                </div>
-              </div>
+                </HeritagePanel>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                className="w-full btn-primary text-base py-4 flex items-center justify-center gap-2 group overflow-hidden relative shadow-saffron-500/30"
-              >
-                {loadingAI ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {t('report.aiProcessing')}
-                  </>
-                ) : submitted ? (
-                  <>
-                    <CheckCircle2 className="w-5 h-5 animate-bounce" />
-                    {t('report.submittedSuccess')}
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    {t('report.submitReport')}
-                  </>
+                {/* Submit */}
+                <button
+                  ref={submitBtnRef}
+                  type="submit"
+                  id="submit-report-btn"
+                  className="btn-primary btn-gsap w-full flex items-center justify-center gap-2"
+                  style={{ fontSize: '1rem', padding: '1rem', opacity: loadingAI ? 0.7 : 1 }}
+                  disabled={loadingAI}
+                >
+                  {loadingAI ? (
+                    <><Loader2 style={{ width: 20, height: 20 }} className="animate-spin" />
+                      <span className="hi-text">AI प्रोसेसिंग...</span>
+                      <span className="en-text">AI Processing...</span>
+                    </>
+                  ) : submitted ? (
+                    <><CheckCircle2 style={{ width: 20, height: 20 }} />
+                      <span className="hi-text">सफलतापूर्वक जमा!</span>
+                      <span className="en-text">Submitted Successfully!</span>
+                    </>
+                  ) : (
+                    <><Send style={{ width: 20, height: 20 }} />
+                      <span className="hi-text">जमा करें</span>
+                      <span className="en-text">Submit Complaint</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Error feedback */}
+                {formFeedback && (
+                  <div style={{
+                    padding: '10px 14px',
+                    background: 'rgba(212,46,24,0.06)',
+                    border: '1px solid rgba(212,46,24,0.25)',
+                    borderRadius: 8,
+                    color: C.fire,
+                    fontSize: '0.85rem',
+                    fontFamily: 'Hind Siliguri, sans-serif',
+                  }}>
+                    {formFeedback}
+                  </div>
                 )}
-              </button>
 
-              {formFeedback && (
-                <p className="text-xs text-red-400 mt-2">{formFeedback}</p>
-              )}
-
-              {submitted && (
-                <div className="bg-trust-500/10 border border-trust-500/20 rounded-xl p-4 flex items-start gap-3 animate-slide-up">
-                  <CheckCircle2 className="w-5 h-5 text-trust-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-trust-400">{t('report.issueReported')}</p>
-                    <p className="text-xs text-gray-400 mt-1">{t('report.trackId')}</p>
-                  </div>
-                </div>
-              )}
-
-              {analysis && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4 animate-fade-in">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Brain className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-medium text-blue-400">{t('report.aiComplaintAnalysis')}</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                {/* Success confirmation */}
+                {submitted && !loadingAI && (
+                  <div style={{
+                    padding: '12px 16px',
+                    background: 'rgba(26,122,138,0.07)',
+                    border: `1.5px solid rgba(26,122,138,0.3)`,
+                    borderRadius: 10,
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                  }}>
+                    <CheckCircle2 style={{ width: 20, height: 20, color: C.teal, marginTop: 2 }} />
                     <div>
-                      <span className="text-gray-500">{t('report.category')}</span>
-                      <p className="text-white font-medium">{analysis.category}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">{t('report.sentiment')}</span>
-                      <p className="text-white font-medium">{analysis.sentiment}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">{t('report.urgencyScore')}</span>
-                      <p className="text-white font-medium">{(analysis.urgency * 100).toFixed(0)}%</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">{t('report.detectedLocation')}</span>
-                      <p className="text-white font-medium">{analysis.location || t('report.unknown')}</p>
+                      <p style={{ fontWeight: 600, color: C.teal, fontSize: '0.9rem', margin: '0 0 2px', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                        <span className="hi-text">समस्या दर्ज हो गई!</span>
+                        <span className="en-text">Issue Reported!</span>
+                      </p>
+                      <p style={{ fontSize: '0.8rem', color: C.inkSoft, margin: 0, fontFamily: 'Hind Siliguri, sans-serif' }}>
+                        <span className="hi-text">ट्रैक ID दी गई। आपको अपडेट मिलेंगे।</span>
+                        <span className="en-text">Track ID assigned. You will receive updates.</span>
+                      </p>
                     </div>
                   </div>
+                )}
 
-                  <div className="mt-4 bg-navy-900/40 border border-white/5 rounded-2xl p-3">
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-gray-500 mb-1">{t('report.whisperTranscript')}</p>
-                    <p className="text-sm text-gray-200 leading-relaxed break-words">{analysis.transcript}</p>
-                  </div>
-                </div>
-              )}
-            </form>
-          </div>
+                {/* AI Analysis result */}
+                {analysis && (
+                  <HeritagePanel style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                      <Brain style={{ width: 16, height: 16, color: C.teal }} />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: C.teal, fontFamily: 'Hind Siliguri, sans-serif' }}>
+                        <span className="hi-text">AI शिकायत विश्लेषण</span>
+                        <span className="en-text">AI Complaint Analysis</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { hiLbl: 'श्रेणी', enLbl: 'Category', val: analysis.category },
+                        { hiLbl: 'भावना', enLbl: 'Sentiment', val: analysis.sentiment },
+                        { hiLbl: 'तात्कालिकता', enLbl: 'Urgency', val: `${(analysis.urgency * 100).toFixed(0)}%` },
+                        { hiLbl: 'स्थान', enLbl: 'Location', val: analysis.location || 'Unknown' },
+                      ].map(({ hiLbl, enLbl, val }) => (
+                        <div key={enLbl}>
+                          <span style={{ fontSize: '0.75rem', color: C.placeholder, display: 'block', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                            <span className="hi-text">{hiLbl}</span>
+                            <span className="en-text">{enLbl}</span>
+                          </span>
+                          <p style={{ fontWeight: 600, color: C.ink, fontSize: '0.9rem', margin: 0, fontFamily: 'Hind Siliguri, sans-serif' }}>{val}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{
+                      marginTop: 14,
+                      padding: '10px 12px',
+                      background: 'rgba(232,130,10,0.05)',
+                      borderRadius: 8,
+                      border: '1px solid rgba(232,130,10,0.2)',
+                    }}>
+                      <p style={{ fontSize: '0.7rem', color: C.placeholder, fontFamily: 'Hind Siliguri, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 4px' }}>
+                        Whisper Transcript
+                      </p>
+                      <p style={{ fontSize: '0.88rem', color: C.ink, lineHeight: 1.55, margin: 0, fontFamily: 'Hind Siliguri, sans-serif' }}>
+                        {analysis.transcript}
+                      </p>
+                    </div>
+                  </HeritagePanel>
+                )}
+              </form>
+            </div>
 
-          {/* Live Tracker + Pipeline */}
-          <div className="lg:col-span-2 space-y-6">
-            <LiveTracker />
-            <PipelineFlow
-              activeIndex={pipelineStep}
-              badgeText={pipelineActive ? t('report.pipelineBadgeLive') : t('report.pipelineBadgeSnapshot')}
-              title={t('report.pipelineTitle')}
-              subtitle={t('report.pipelineSubtitle')}
-              extra={{
-                label: t('report.whisperPreview'),
-                value: transcriptPreview,
-                meta: pipelineActive ? t('report.streamingLabel') : t('report.awaitingIntake'),
-              }}
-            />
+            {/* ── Right: Tracker + Pipeline ── */}
+            <div className="lg:col-span-2 space-y-6">
+              <LiveTracker />
+              <PipelineFlow
+                activeIndex={pipelineStep}
+                badgeText={pipelineActive ? t('report.pipelineBadgeLive') : t('report.pipelineBadgeSnapshot')}
+                title={t('report.pipelineTitle')}
+                subtitle={t('report.pipelineSubtitle')}
+                extra={{
+                  label: t('report.whisperPreview'),
+                  value: transcriptPreview,
+                  meta: pipelineActive ? t('report.streamingLabel') : t('report.awaitingIntake'),
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -9,12 +9,12 @@ function IssueModal({ issue, onClose }) {
   if (!issue) return null;
 
   const sentimentColor = issue.sentimentScore < -0.7 ? 'text-red-400' : 
-                          issue.sentimentScore < -0.4 ? 'text-saffron-400' : 'text-yellow-400';
+                          issue.sentimentScore < -0.4 ? 'text-amber-400' : 'text-yellow-400';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-navy-900 border border-white/10 rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto modal-content" onClick={e => e.stopPropagation()}>
+      <div className="relative bg-ink-900 border border-white/10 rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto modal-content" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
@@ -53,7 +53,7 @@ function IssueModal({ issue, onClose }) {
           <div className="bg-white/5 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Input Method</p>
             <p className="text-sm text-white flex items-center gap-1.5">
-              {issue.inputMode === 'voice' ? <Mic className="w-4 h-4 text-saffron-400" /> :
+              {issue.inputMode === 'voice' ? <Mic className="w-4 h-4 text-amber-400" /> :
                issue.inputMode === 'image' ? <Image className="w-4 h-4 text-blue-400" /> :
                <Type className="w-4 h-4 text-gray-400" />}
               {issue.inputMode.charAt(0).toUpperCase() + issue.inputMode.slice(1)}
@@ -85,7 +85,7 @@ function IssueModal({ issue, onClose }) {
           </div>
           <div className="text-center bg-white/5 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Public Impact</p>
-            <p className="text-2xl font-bold text-saffron-400">{issue.publicImpact}</p>
+            <p className="text-2xl font-bold text-amber-400">{issue.publicImpact}</p>
           </div>
           <div className="text-center bg-white/5 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Sentiment</p>
@@ -151,9 +151,9 @@ export default function PriorityInbox() {
   const statusColors = {
     submitted: 'bg-gray-500/20 text-gray-400',
     ai_processing: 'bg-blue-500/20 text-blue-400',
-    administration_dashboard: 'bg-saffron-500/20 text-saffron-400',
-    action_taken: 'bg-trust-500/20 text-trust-400',
-    verified: 'bg-trust-500/20 text-trust-300',
+    administration_dashboard: 'bg-amber-500/20 text-amber-400',
+    action_taken: 'bg-teal-500/20 text-teal-400',
+    verified: 'bg-teal-500/20 text-teal-300',
   };
 
   const statusLabels = {
@@ -171,13 +171,13 @@ export default function PriorityInbox() {
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Brain className="w-5 h-5 text-saffron-400" />
+              <Brain className="w-5 h-5 text-amber-400" />
               AI Priority Inbox
             </h3>
             <p className="text-xs text-gray-500 mt-1">Auto-ranked by urgency × public impact</p>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="w-2 h-2 rounded-full bg-trust-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
             Live Updating
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function PriorityInbox() {
                 <div className="text-center">
                   <span className={`text-lg font-bold ${
                     issue.aiScore >= 85 ? 'text-red-400' :
-                    issue.aiScore >= 70 ? 'text-saffron-400' : 'text-trust-400'
+                    issue.aiScore >= 70 ? 'text-amber-400' : 'text-teal-400'
                   }`}>{issue.aiScore}</span>
                   <p className="text-[10px] text-gray-600">Score</p>
                 </div>
@@ -211,7 +211,7 @@ export default function PriorityInbox() {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="text-sm font-semibold text-white truncate group-hover:text-saffron-400 transition-colors">
+                  <h4 className="text-sm font-semibold text-white truncate group-hover:text-amber-400 transition-colors">
                     {issue.title}
                   </h4>
                 </div>

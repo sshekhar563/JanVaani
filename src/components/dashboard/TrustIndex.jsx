@@ -63,15 +63,15 @@ export default function TrustIndex() {
   };
 
   const metricItems = [
-    { key: 'issueResolution', label: 'Resolution Speed', value: metrics.issueResolution, icon: Zap, color: 'trust' },
-    { key: 'citizenSentiment', label: 'Citizen Sentiment', value: metrics.citizenSentiment, icon: Heart, color: 'saffron' },
+    { key: 'issueResolution', label: 'Resolution Speed', value: metrics.issueResolution, icon: Zap, color: 'teal' },
+    { key: 'citizenSentiment', label: 'Citizen Sentiment', value: metrics.citizenSentiment, icon: Heart, color: 'amber' },
     { key: 'verifiedWorkProof', label: 'Verified Proof', value: metrics.verifiedWorkProof, icon: Shield, color: 'blue' },
     { key: 'communicationTransparency', label: 'Communication', value: metrics.communicationTransparency, icon: MessageCircle, color: 'purple' },
   ];
 
   const colorMap = {
-    trust: { bar: 'bg-trust-500', text: 'text-trust-400' },
-    saffron: { bar: 'bg-saffron-500', text: 'text-saffron-400' },
+    trust: { bar: 'bg-teal-500', text: 'text-teal-400' },
+    amber: { bar: 'bg-amber-500', text: 'text-amber-400' },
     blue: { bar: 'bg-blue-500', text: 'text-blue-400' },
     purple: { bar: 'bg-purple-500', text: 'text-purple-400' },
   };
@@ -81,7 +81,7 @@ export default function TrustIndex() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-trust-400" />
+            <TrendingUp className="w-5 h-5 text-teal-400" />
             Public Trust Index
           </h3>
           <p className="text-xs text-gray-500 mt-1">Aggregated from 4 key metrics</p>
@@ -104,8 +104,8 @@ export default function TrustIndex() {
           {metricItems.map(item => (
             <div key={item.key} className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                item.color === 'trust' ? 'bg-trust-500/15' :
-                item.color === 'saffron' ? 'bg-saffron-500/15' :
+                item.color === 'teal' ? 'bg-teal-500/15' :
+                item.color === 'amber' ? 'bg-amber-500/15' :
                 item.color === 'blue' ? 'bg-blue-500/15' : 'bg-purple-500/15'
               }`}>
                 <item.icon className={`w-4 h-4 ${colorMap[item.color].text}`} />

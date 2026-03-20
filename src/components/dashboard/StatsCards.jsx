@@ -27,7 +27,7 @@ export default function StatsCards() {
       change: '+18%',
       trend: 'up',
       icon: CheckCircle2,
-      color: 'trust',
+      color: 'teal',
     },
     {
       label: 'Pending',
@@ -35,7 +35,7 @@ export default function StatsCards() {
       change: '-5%',
       trend: 'down',
       icon: Clock,
-      color: 'saffron',
+      color: 'amber',
     },
     {
       label: 'Pothole Alerts',
@@ -51,7 +51,7 @@ export default function StatsCards() {
       change: '+3%',
       trend: 'up',
       icon: Users,
-      color: 'trust',
+      color: 'teal',
     },
   ];
 
@@ -61,20 +61,20 @@ export default function StatsCards() {
         <div key={i} className="stat-card">
           <div className="flex items-start justify-between mb-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              card.color === 'trust' ? 'bg-trust-500/15' :
-              card.color === 'saffron' ? 'bg-saffron-500/15' :
+              card.color === 'teal' ? 'bg-teal-500/15' :
+              card.color === 'amber' ? 'bg-amber-500/15' :
               card.color === 'red' ? 'bg-red-500/15' : 'bg-blue-500/15'
             }`}>
               <card.icon className={`w-5 h-5 ${
-                card.color === 'trust' ? 'text-trust-400' :
-                card.color === 'saffron' ? 'text-saffron-400' :
+                card.color === 'teal' ? 'text-teal-400' :
+                card.color === 'amber' ? 'text-amber-400' :
                 card.color === 'red' ? 'text-red-400' : 'text-blue-400'
               }`} />
             </div>
             <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
               card.trend === 'up' 
-                ? card.color === 'red' ? 'text-red-400 bg-red-500/10' : 'text-trust-400 bg-trust-500/10'
-                : 'text-saffron-400 bg-saffron-500/10'
+                ? card.color === 'red' ? 'text-red-400 bg-red-500/10' : 'text-teal-400 bg-teal-500/10'
+                : 'text-amber-400 bg-amber-500/10'
             }`}>
               {card.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {card.change}

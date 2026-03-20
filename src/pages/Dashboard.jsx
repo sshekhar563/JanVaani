@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/dashboard/Sidebar';
 import StatsCards from '../components/dashboard/StatsCards';
 import PriorityInbox from '../components/dashboard/PriorityInbox';
@@ -27,7 +27,7 @@ function DashboardHeader() {
           <input
             type="text"
             placeholder={t('dashboard.searchPlaceholder')}
-            className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 w-64"
+            className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 w-64"
           />
         </div>
         
@@ -39,7 +39,7 @@ function DashboardHeader() {
         
         {/* Profile */}
         <button className="flex items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-saffron-500 to-trust-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-teal-500 flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
           <span className="text-sm text-gray-300 hidden sm:block">{t('dashboard.admin')}</span>
@@ -61,7 +61,7 @@ function OverviewView() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-saffron-400" />
+                <Activity className="w-5 h-5 text-amber-400" />
                 {t('dashboard.quickInsights')}
               </h3>
               <p className="text-xs text-gray-500 mt-1">{t('dashboard.aiSummary')}</p>
@@ -78,13 +78,13 @@ function OverviewView() {
                 insight.type === 'critical' ? 'bg-red-500/5 border-red-500/20' :
                 insight.type === 'warning' ? 'bg-amber-500/5 border-amber-500/20' :
                 insight.type === 'info' ? 'bg-blue-500/5 border-blue-500/20' :
-                'bg-trust-500/5 border-trust-500/20'
+                'bg-teal-500/5 border-teal-500/20'
               }`}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className={`text-xs font-bold ${
                     insight.type === 'critical' ? 'text-red-400' :
                     insight.type === 'warning' ? 'text-amber-400' :
-                    insight.type === 'info' ? 'text-blue-400' : 'text-trust-400'
+                    insight.type === 'info' ? 'text-blue-400' : 'text-teal-400'
                   }`}>{insight.label}</span>
                 </div>
                 <p className="text-sm text-gray-300">{insight.desc}</p>
@@ -142,7 +142,7 @@ function PotholeReportsView() {
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Camera className="w-5 h-5 text-saffron-400" />
+              <Camera className="w-5 h-5 text-amber-400" />
               Pothole Detection Reports
             </h3>
             <p className="text-xs text-gray-500 mt-1">AI-analyzed road images with detection results</p>
@@ -201,7 +201,7 @@ function PotholeReportsView() {
                   <div className="text-right flex-shrink-0 hidden sm:block">
                     <p className="text-xs font-mono text-gray-500">{report.tracking_id}</p>
                     <p className={`text-xs mt-1 px-2 py-0.5 rounded-full ${
-                      report.status === 'Pending' ? 'bg-saffron-500/15 text-saffron-400' : 'bg-trust-500/15 text-trust-400'
+                      report.status === 'Pending' ? 'bg-amber-500/15 text-amber-400' : 'bg-teal-500/15 text-teal-400'
                     }`}>{report.status}</p>
                   </div>
                 </div>
@@ -228,7 +228,7 @@ function AnalyticsView() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-trust-400" />
+                <TrendingUp className="w-5 h-5 text-teal-400" />
                 {t('dashboard.trustScoreTrend')}
               </h3>
               <p className="text-xs text-gray-500 mt-1">{t('dashboard.last6Months')}</p>
@@ -240,7 +240,7 @@ function AnalyticsView() {
               <div key={i} className="flex-1 flex flex-col items-center gap-2">
                 <span className="text-xs text-gray-400 font-medium">{val}</span>
                 <div
-                  className="w-full rounded-t-lg bg-gradient-to-t from-trust-600 to-trust-400 transition-all duration-1000"
+                  className="w-full rounded-t-lg bg-gradient-to-t from-teal-600 to-teal-400 transition-all duration-1000"
                   style={{ height: `${(val / maxTrend) * 100}%` }}
                 />
                 <span className="text-[10px] text-gray-500">{trendLabels[i]}</span>
@@ -253,7 +253,7 @@ function AnalyticsView() {
       {/* Category Distribution */}
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-saffron-400" />
+          <BarChart3 className="w-5 h-5 text-amber-400" />
           {t('dashboard.categoryDistribution')}
         </h3>
         <div className="space-y-3">
@@ -270,7 +270,7 @@ function AnalyticsView() {
               <span className="text-sm text-gray-300 w-48 flex-shrink-0 truncate">{cat.label}</span>
               <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-saffron-500 to-trust-500 transition-all duration-1000"
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-teal-500 transition-all duration-1000"
                   style={{ width: `${cat.pct}%` }}
                 />
               </div>
@@ -299,7 +299,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-900 text-white pt-16">
+    <div className="min-h-screen text-white pt-16" style={{ background: '#1A1208' }}>
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}

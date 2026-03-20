@@ -1,97 +1,201 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Shield, LogIn, UserPlus, Languages, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
+import Logo from './Logo';
+import gsap from 'gsap';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
-  const { t, i18n } = useTranslation();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { t } = useTranslation();
+  const { isAuthenticated, logout } = useAuth();
+  const { lang, setLang } = useLang();
 
-  const toggleLanguage = () => {
-    const next = i18n.language === 'en' ? 'hi' : 'en';
-    i18n.changeLanguage(next);
-  };
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const isHindi = i18n.language === 'hi';
+  // GSAP button animations
+  const navBtnsRef = useRef([]);
+  useEffect(() => {
+    navBtnsRef.current.forEach(btn => {
+      if (!btn) return;
+      const onEnter = () => gsap.to(btn, { scale: 1.05, duration: 0.2, ease: 'power2.out' });
+      const onLeave = () => gsap.to(btn, { scale: 1, duration: 0.2, ease: 'power2.out' });
+      btn.addEventListener('mouseenter', onEnter);
+      btn.addEventListener('mouseleave', onLeave);
+      btn._gsapCleanup = () => {
+        btn.removeEventListener('mouseenter', onEnter);
+        btn.removeEventListener('mouseleave', onLeave);
+      };
+    });
+    return () => navBtnsRef.current.forEach(btn => btn?._gsapCleanup?.());
+  }, []);
+
+  const navLinks = [
+    { to: '/',          hiLabel: 'घर',              enLabel: 'Home' },
+    { to: '/report',    hiLabel: 'शिकायत दर्ज करें', enLabel: 'File Complaint' },
+    { to: '/dashboard', hiLabel: 'डैशबोर्ड',         enLabel: 'Dashboard' },
+  ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isDashboard 
-        ? 'bg-navy-900 border-b border-white/10' 
-        : 'bg-navy-900/80 backdrop-blur-xl border-b border-white/10'
-    }`}>
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      style={{
+        background: '#1A1208',
+        backdropFilter: 'blur(20px)',
+        borderBottom: scrolled
+          ? '1px solid rgba(245,184,48,0.25)'
+          : '1px solid rgba(245,184,48,0.1)',
+        boxShadow: scrolled ? '0 4px 24px rgba(26,18,8,0.3)' : 'none',
+      }}
+    >
+      {/* Top accent line */}
+      <div style={{
+        height: '3px',
+        background: 'linear-gradient(90deg, transparent, #E8820A, #C4440A, #1A7A8A, #E8820A, transparent)',
+        opacity: scrolled ? 1 : 0.6,
+        transition: 'opacity 0.3s',
+      }} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-saffron-500 to-trust-500 flex items-center justify-center shadow-lg shadow-saffron-500/25 group-hover:shadow-saffron-500/40 transition-shadow">
-              <Shield className="w-5 h-5 text-white" />
+          <Link to="/" className="flex items-center gap-2.5 group" id="nav-logo">
+            <div className="transition-transform duration-300 group-hover:scale-110">
+              <Logo size={40} />
             </div>
-            <div>
-              <span className="text-lg font-bold text-white tracking-tight">Jan Vaani</span>
-              <span className="hidden sm:inline text-[10px] text-saffron-400 ml-1.5 font-medium uppercase tracking-wider">{t('navbar.tagline')}</span>
+            <div className="flex flex-col leading-tight">
+              <span
+                className="text-lg font-bold tracking-tight"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: '#FDECC8',
+                }}
+              >
+                JanVaani
+              </span>
+              <span
+                className="text-[9px] font-medium tracking-widest uppercase hidden sm:block"
+                style={{ color: '#F5B830', fontFamily: "'Noto Serif Devanagari', serif" }}
+              >
+                जनवाणी
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-1">
-            <Link to="/" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              location.pathname === '/' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}>{t('navbar.home')}</Link>
-            <Link to="/report" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              location.pathname === '/report' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}>{t('navbar.reportIssue')}</Link>
-            <Link to="/dashboard" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              location.pathname === '/dashboard' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}>{t('navbar.dashboard')}</Link>
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  id={`nav-${link.to.replace('/', '') || 'home'}`}
+                  className="relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md"
+                  style={{
+                    color: isActive ? '#F5B830' : '#FDECC8',
+                    fontFamily: 'Hind Siliguri, sans-serif',
+                    fontWeight: isActive ? 600 : 500,
+                  }}
+                >
+                  <span className="hi-text">{link.hiLabel}</span>
+                  <span className="en-text">{link.enLabel}</span>
+                  {/* Active underline */}
+                  <span
+                    className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
+                    style={{
+                      width: isActive ? '100%' : '0%',
+                      background: '#F5B830',
+                    }}
+                  />
+                </Link>
+              );
+            })}
           </div>
 
-          {/* Auth Buttons + Lang Toggle */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              title={isHindi ? 'Switch to English' : 'हिंदी में बदलें'}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-white/10 hover:border-saffron-500/50 text-gray-300 hover:text-saffron-400 hover:bg-saffron-500/5 transition-all duration-300"
-            >
-              <Languages className="w-4 h-4" />
-              <span>{isHindi ? 'EN' : 'हिं'}</span>
-            </button>
+          {/* Right Side Actions */}
+          <div className="hidden md:flex items-center gap-2.5">
+            {/* Language Toggle Pill */}
+            <div className="lang-toggle lang-toggle-nav">
+              <button
+                className={lang === 'hi' ? 'active' : ''}
+                onClick={() => setLang('hi')}
+              >
+                हिंदी
+              </button>
+              <button
+                className={lang === 'en' ? 'active' : ''}
+                onClick={() => setLang('en')}
+              >
+                English
+              </button>
+            </div>
 
             {isAuthenticated ? (
               <button
+                id="logout-btn"
                 onClick={logout}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 btn-outline border-none text-red-400 hover:text-red-300"
+                ref={el => navBtnsRef.current[0] = el}
+                className="btn-gsap px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200"
+                style={{
+                  color: '#FDECC8',
+                  border: '1.5px solid rgba(212,46,24,0.5)',
+                  background: 'rgba(212,46,24,0.15)',
+                }}
               >
-                <LogOut className="w-4 h-4" />
-                Logout
+                <LogOut className="w-4 h-4 inline mr-1" />
+                <span className="hi-text">लॉगआउट</span>
+                <span className="en-text">Logout</span>
               </button>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 btn-outline border-none`}
+                  id="nav-login-btn"
+                  ref={el => navBtnsRef.current[1] = el}
+                  className="btn-gsap px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200"
+                  style={{
+                    color: '#FDECC8',
+                    border: '1.5px solid rgba(253,236,200,0.3)',
+                    fontFamily: 'Hind Siliguri, sans-serif',
+                    background: 'transparent',
+                  }}
                 >
-                  <LogIn className="w-4 h-4" />
-                  {t('navbar.login')}
+                  <LogIn className="w-4 h-4 inline mr-1" />
+                  <span className="hi-text">लॉगिन</span>
+                  <span className="en-text">Login</span>
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 flex items-center gap-2 btn-primary border-none"
+                  id="nav-signup-btn"
+                  ref={el => navBtnsRef.current[2] = el}
+                  className="btn-primary btn-gsap text-sm py-2 px-5"
                 >
-                  <UserPlus className="w-4 h-4" />
-                  {t('navbar.signUp')}
+                  <UserPlus className="w-4 h-4 inline mr-1" />
+                  <span className="hi-text">साइन अप</span>
+                  <span className="en-text">Sign Up</span>
                 </Link>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
+          {/* Mobile Hamburger */}
+          <button
+            id="mobile-menu-toggle"
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 rounded-lg transition-colors"
+            style={{ color: '#FDECC8' }}
+          >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -99,31 +203,75 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-navy-900/98 backdrop-blur-xl border-t border-white/10 animate-fade-in">
-          <div className="px-4 py-4 space-y-2">
-            <Link to="/" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">{t('navbar.home')}</Link>
-            <Link to="/report" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">{t('navbar.reportIssue')}</Link>
-            <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">{t('navbar.dashboard')}</Link>
-            <div className="border-t border-white/10 my-3" />
-            {/* Language Toggle (mobile) */}
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 w-full px-4 py-3 text-gray-300 hover:text-saffron-400 hover:bg-white/5 rounded-xl transition-all text-sm font-medium"
-            >
-              <Languages className="w-4 h-4" />
-              {isHindi ? 'Switch to English' : 'हिंदी में बदलें'}
-            </button>
+        <div
+          className="md:hidden border-t animate-slide-up"
+          style={{
+            background: '#1A1208',
+            borderColor: 'rgba(245,184,48,0.2)',
+          }}
+        >
+          <div className="px-4 py-4 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  color: '#FDECC8',
+                  fontFamily: 'Hind Siliguri, sans-serif',
+                }}
+              >
+                <span className="hi-text">{link.hiLabel}</span>
+                <span className="en-text">{link.enLabel}</span>
+              </Link>
+            ))}
+
+            <div className="border-t my-3" style={{ borderColor: 'rgba(245,184,48,0.2)' }} />
+
+            {/* Mobile Language Toggle */}
+            <div className="px-4 py-2">
+              <div className="lang-toggle lang-toggle-nav">
+                <button
+                  className={lang === 'hi' ? 'active' : ''}
+                  onClick={() => setLang('hi')}
+                >
+                  हिंदी
+                </button>
+                <button
+                  className={lang === 'en' ? 'active' : ''}
+                  onClick={() => setLang('en')}
+                >
+                  English
+                </button>
+              </div>
+            </div>
+
             {isAuthenticated ? (
-              <button onClick={() => { logout(); setIsOpen(false); }} className="flex w-full items-center gap-2 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-white/5 rounded-xl transition-all">
-                <LogOut className="w-4 h-4" /> Logout
+              <button
+                onClick={() => { logout(); setIsOpen(false); }}
+                className="flex w-full items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
+                style={{ color: '#D42E18' }}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hi-text">लॉगआउट</span>
+                <span className="en-text">Logout</span>
               </button>
             ) : (
               <>
-                <Link to="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-                  <LogIn className="w-4 h-4" /> {t('navbar.login')}
+                <Link to="/login" onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
+                  style={{ color: '#FDECC8', fontFamily: 'Hind Siliguri, sans-serif' }}
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hi-text">लॉगिन</span>
+                  <span className="en-text">Login</span>
                 </Link>
-                <Link to="/signup" onClick={() => setIsOpen(false)} className="block btn-primary text-center text-sm mt-2">
-                  {t('navbar.signUp')}
+                <Link to="/signup" onClick={() => setIsOpen(false)}
+                  className="btn-primary w-full text-center block text-sm mt-2"
+                >
+                  <span className="hi-text">साइन अप</span>
+                  <span className="en-text">Sign Up</span>
                 </Link>
               </>
             )}

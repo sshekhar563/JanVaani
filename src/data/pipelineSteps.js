@@ -6,7 +6,7 @@ export const pipelineSteps = [
     label: 'Citizen Intake',
     description: 'Voice / Text / Image received',
     icon: Mic,
-    color: 'saffron',
+    color: 'amber',
   },
   {
     key: 'whisper',
@@ -27,7 +27,7 @@ export const pipelineSteps = [
     label: 'Reality Check',
     description: 'Cross-verify & dedup',
     icon: Shield,
-    color: 'trust',
+    color: 'teal',
   },
   {
     key: 'dashboard',
@@ -41,6 +41,6 @@ export const pipelineSteps = [
     label: 'Action & Proof',
     description: 'Resolved with verified proof',
     icon: Hammer,
-    color: 'trust',
+    color: 'teal',
   },
 ];

@@ -1,9 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* ═══════════════════════════════════════════════════
+   JanVaani — Oil Painting Inspired Design System
+   Bold Orange × Teal × Amber Brushstrokes
+   ═══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Noto+Serif+Devanagari:wght@400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties (New Palette) ─── */
+:root {
+  --color-primary:    #C4440A;
+  --color-fire:       #D42E18;
+  --color-amber:      #E8820A;
+  --color-gold:       #F5B830;
+  --color-teal:       #1A7A8A;
+  --color-teal-deep:  #0D4A5C;
+  --color-cyan:       #2A9BAD;
+  --color-bg:         #FDECC8;
+  --color-ink:        #1A1208;
+  --color-ink-soft:   #3D2A18;
+}
+
+/* ─── Base ─── */
 @layer base {
   * {
     margin: 0;
@@ -16,145 +36,374 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Hind Siliguri', system-ui, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--color-primary);
+  }
+
+  .devanagari {
+    font-family: 'Noto Serif Devanagari', serif;
+    font-size: 1.1em;
+  }
 }
 
+/* ─── Language Toggle CSS Rules ─── */
+html[lang="hi"] .en-text { display: none !important; }
+html[lang="en"] .hi-text { display: none !important; }
+
+/* ─── Language fade transition ─── */
+.hi-text, .en-text {
+  transition: opacity 200ms ease;
+}
+
+/* ─── Components ─── */
 @layer components {
-  .glass-card {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl;
+
+  /* Typography */
+  .headline-hero {
+    @apply font-serif text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight;
+    color: var(--color-primary);
   }
 
-  .glass-card-dark {
-    @apply bg-navy-900/60 backdrop-blur-xl border border-white/10 rounded-2xl;
+  .headline-section {
+    @apply font-serif text-3xl sm:text-4xl font-bold;
+    color: var(--color-primary);
   }
 
-  .gradient-text {
-    @apply bg-gradient-to-r from-saffron-500 via-white to-trust-400 bg-clip-text text-transparent;
+  .subheading {
+    @apply text-base sm:text-lg leading-relaxed;
+    color: var(--color-ink-soft);
+    font-family: 'Hind Siliguri', sans-serif;
   }
 
-  .gradient-text-dark {
-    @apply bg-gradient-to-r from-navy-600 via-navy-800 to-trust-500 bg-clip-text text-transparent;
+  .gradient-text-heritage {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-amber) 50%, var(--color-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
+  .gradient-text-gold {
+    background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-amber) 60%, var(--color-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Buttons ── */
   .btn-primary {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg active:scale-95;
-    background: linear-gradient(to right, #f97316, #ea580c);
-    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.25);
+    @apply relative inline-flex items-center justify-center px-7 py-3.5 font-semibold text-sm tracking-wide transition-all duration-300 active:scale-95 cursor-pointer select-none;
+    background: var(--color-primary);
+    color: #ffffff;
+    border: 2px solid var(--color-primary);
+    box-shadow:
+      inset 0 0 0 2px rgba(255,255,255,0.15),
+      0 4px 20px rgba(196,68,10,0.3);
+    border-radius: 6px;
+    outline: 2px solid rgba(232,130,10,0.35);
+    outline-offset: 3px;
   }
+
   .btn-primary:hover {
-    background: linear-gradient(to right, #ea580c, #c2410c);
-    box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.3);
+    background: #a3370a;
+    box-shadow:
+      inset 0 0 0 2px rgba(255,255,255,0.25),
+      0 0 28px 8px rgba(232,130,10,0.35),
+      0 8px 32px rgba(196,68,10,0.4);
     transform: translateY(-2px);
+    outline-color: rgba(232,130,10,0.6);
   }
 
   .btn-secondary {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg active:scale-95;
-    background: linear-gradient(to right, #1e40af, #1a2744);
-    border: 1px solid rgba(37, 99, 235, 0.3);
-    box-shadow: 0 10px 15px -3px rgba(26, 39, 68, 0.25);
-  }
-  .btn-secondary:hover {
-    background: linear-gradient(to right, #2563eb, #1e40af);
-    box-shadow: 0 20px 25px -5px rgba(26, 39, 68, 0.3);
-    transform: translateY(-2px);
+    @apply relative inline-flex items-center justify-center px-7 py-3.5 font-semibold text-sm tracking-wide transition-all duration-300 active:scale-95 cursor-pointer;
+    background: var(--color-teal);
+    color: #ffffff;
+    border: 2px solid var(--color-teal);
+    border-radius: 6px;
+    outline: 2px solid transparent;
+    outline-offset: 3px;
   }
 
-  .btn-outline {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 active:scale-95;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-  }
-  .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.1);
+  .btn-secondary:hover {
+    background: #14616e;
+    box-shadow: 0 0 20px rgba(26,122,138,0.4);
     transform: translateY(-2px);
   }
 
   .btn-admin {
-    @apply relative overflow-hidden text-white font-bold py-3 px-6 rounded-xl transition-all duration-500 shadow-xl active:scale-95;
-    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    @apply relative inline-flex items-center justify-center px-7 py-3.5 font-semibold text-sm tracking-wide text-white transition-all duration-300 active:scale-95 cursor-pointer overflow-hidden;
+    background: linear-gradient(135deg, var(--color-teal-deep) 0%, var(--color-teal) 100%);
+    border: 2px solid rgba(26,122,138,0.6);
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(13,74,92,0.3);
   }
 
-  .card-hover {
-    @apply transition-all duration-300;
+  .btn-admin:hover {
+    background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-deep) 100%);
+    box-shadow: 0 8px 32px rgba(13,74,92,0.45);
+    transform: translateY(-2px);
   }
-  .card-hover:hover {
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+
+  /* GSAP-ready button class */
+  .btn-gsap {
+    will-change: transform;
+  }
+
+  /* ── Cards ── */
+  .heritage-card {
+    @apply relative transition-all duration-300;
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-amber);
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(196,68,10,0.07);
+  }
+
+  .heritage-card:hover {
+    border-color: var(--color-primary);
+    box-shadow:
+      0 12px 40px rgba(196,68,10,0.14),
+      0 0 0 1px rgba(232,130,10,0.2);
     transform: translateY(-4px);
   }
 
-  .tag-high {
-    @apply px-3 py-1 text-xs font-bold rounded-full bg-red-500/15 text-red-400 border border-red-500/20;
+  .glass-card-heritage {
+    background: rgba(253,236,200,0.88);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(232,130,10,0.25);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(196,68,10,0.12);
   }
 
-  .tag-medium {
-    @apply px-3 py-1 text-xs font-bold rounded-full bg-saffron-500/15 text-saffron-400 border border-saffron-500/20;
+  /* ── Form Inputs ── */
+  .input-archival {
+    @apply w-full px-4 py-3.5 text-sm transition-all duration-300;
+    background: transparent;
+    border: none;
+    border-bottom: 2.5px solid rgba(196,68,10,0.3);
+    border-radius: 0;
+    color: var(--color-ink);
+    outline: none;
+    font-family: 'Hind Siliguri', sans-serif;
   }
 
-  .tag-low {
-    @apply px-3 py-1 text-xs font-bold rounded-full bg-trust-500/15 text-trust-400 border border-trust-500/20;
+  .input-archival::placeholder {
+    color: rgba(61,42,24,0.5);
+    font-style: italic;
   }
 
-  .tag-misinfo {
-    @apply px-3 py-1 text-xs font-bold rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20;
+  .input-archival:focus {
+    border-bottom-color: var(--color-amber);
+    box-shadow: 0 3px 0 0 rgba(232,130,10,0.25);
+    background: rgba(245,184,48,0.06);
   }
 
-  .tag-geo {
-    @apply px-3 py-1 text-xs font-bold rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20;
+  .input-group {
+    @apply relative;
+    border-bottom: 2.5px solid rgba(196,68,10,0.2);
   }
 
+  .input-group:focus-within {
+    border-bottom-color: var(--color-amber);
+  }
+
+  /* ── Stat Cards ── */
+  .stat-card {
+    @apply heritage-card flex flex-col items-center py-6 px-4;
+  }
+
+  /* ── Sidebar ── */
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 font-medium transition-all duration-200;
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200;
+    color: rgba(253,236,200,0.7);
+    font-family: 'Hind Siliguri', sans-serif;
   }
+
   .sidebar-link:hover {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
+    background: rgba(253,236,200,0.08);
+    color: var(--color-bg);
   }
 
   .sidebar-link-active {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-white font-semibold
-    bg-gradient-to-r from-navy-600/50 to-transparent border-l-2 border-saffron-500;
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg font-semibold;
+    background: rgba(232,130,10,0.15);
+    color: var(--color-gold);
+    border-left: 3px solid var(--color-amber);
   }
 
-  .stat-card {
-    @apply bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl 
-    border border-white/10 rounded-2xl p-6 card-hover;
+  /* ── Priority Tags ── */
+  .tag-high {
+    @apply px-3 py-1 text-xs font-bold rounded-sm;
+    background: rgba(212,46,24,0.12);
+    color: var(--color-fire);
+    border: 1px solid rgba(212,46,24,0.25);
+  }
+
+  .tag-medium {
+    @apply px-3 py-1 text-xs font-bold rounded-sm;
+    background: rgba(232,130,10,0.12);
+    color: var(--color-amber);
+    border: 1px solid rgba(232,130,10,0.3);
+  }
+
+  .tag-low {
+    @apply px-3 py-1 text-xs font-bold rounded-sm;
+    background: rgba(26,122,138,0.1);
+    color: var(--color-teal);
+    border: 1px solid rgba(26,122,138,0.25);
+  }
+
+  .tag-misinfo {
+    @apply px-3 py-1 text-xs font-bold rounded-sm;
+    background: rgba(196,68,10,0.1);
+    color: var(--color-primary);
+    border: 1px solid rgba(196,68,10,0.25);
+  }
+
+  .tag-geo {
+    @apply px-3 py-1 text-xs font-bold rounded-sm;
+    background: rgba(13,74,92,0.1);
+    color: var(--color-teal-deep);
+    border: 1px solid rgba(13,74,92,0.25);
+  }
+
+  /* ── Section Dividers ── */
+  .jaali-divider {
+    position: relative;
+    height: 40px;
+    overflow: hidden;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect x='10' y='10' width='20' height='20' fill='none' stroke='%23E8820A' stroke-width='1' opacity='0.18' transform='rotate(45 20 20)'/%3E%3Ccircle cx='20' cy='0' r='3' fill='none' stroke='%23C4440A' stroke-width='0.8' opacity='0.12'/%3E%3Ccircle cx='20' cy='40' r='3' fill='none' stroke='%23C4440A' stroke-width='0.8' opacity='0.12'/%3E%3Ccircle cx='0' cy='20' r='3' fill='none' stroke='%23C4440A' stroke-width='0.8' opacity='0.12'/%3E%3Ccircle cx='40' cy='20' r='3' fill='none' stroke='%23C4440A' stroke-width='0.8' opacity='0.12'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 40px 40px;
+  }
+
+  .rangoli-rule {
+    @apply relative flex items-center gap-4 py-2;
+  }
+
+  .rangoli-rule::before,
+  .rangoli-rule::after {
+    content: '';
+    flex: 1;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(232,130,10,0.5), transparent);
+  }
+
+  /* ── Nav Link ── */
+  .nav-link-heritage {
+    @apply relative px-3 py-2 text-sm font-medium transition-all duration-200;
+    color: rgba(253,236,200,0.75);
+    font-family: 'Hind Siliguri', sans-serif;
+  }
+
+  .nav-link-heritage::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--color-gold);
+    transition: width 0.3s ease;
+  }
+
+  .nav-link-heritage:hover::after,
+  .nav-link-heritage.active::after {
+    width: 100%;
+  }
+
+  .nav-link-heritage:hover {
+    color: var(--color-gold);
+  }
+
+  .nav-link-heritage.active {
+    color: var(--color-gold);
+    font-weight: 600;
+  }
+
+  /* ── Notification Badge ── */
+  .badge-lotus {
+    @apply inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white;
+    background: var(--color-fire);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   }
 }
 
+/* ─── Utilities ─── */
 @layer utilities {
-  .animate-delay-100 { animation-delay: 100ms; }
-  .animate-delay-200 { animation-delay: 200ms; }
-  .animate-delay-300 { animation-delay: 300ms; }
-  .animate-delay-400 { animation-delay: 400ms; }
-  .animate-delay-500 { animation-delay: 500ms; }
-  .animate-delay-600 { animation-delay: 600ms; }
-  .animate-delay-700 { animation-delay: 700ms; }
+  .animate-delay-100 { animation-delay: 100ms; animation-fill-mode: both; }
+  .animate-delay-200 { animation-delay: 200ms; animation-fill-mode: both; }
+  .animate-delay-300 { animation-delay: 300ms; animation-fill-mode: both; }
+  .animate-delay-400 { animation-delay: 400ms; animation-fill-mode: both; }
+  .animate-delay-500 { animation-delay: 500ms; animation-fill-mode: both; }
+  .animate-delay-600 { animation-delay: 600ms; animation-fill-mode: both; }
+  .animate-delay-700 { animation-delay: 700ms; animation-fill-mode: both; }
+  .animate-delay-800 { animation-delay: 800ms; animation-fill-mode: both; }
 
-  .text-shadow-glow {
-    text-shadow: 0 0 40px rgba(249, 115, 22, 0.3);
+  .text-shadow-primary {
+    text-shadow: 0 0 40px rgba(196,68,10,0.4);
   }
+
+  .text-shadow-ink {
+    text-shadow: 0 2px 12px rgba(26,18,8,0.25);
+  }
+
+  .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+  .font-devanagari { font-family: 'Noto Serif Devanagari', serif; }
+  .font-body { font-family: 'Hind Siliguri', system-ui, sans-serif; }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* ─── Keyframes ─── */
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
-::-webkit-scrollbar-track {
-  background: #0f172a;
+@keyframes slideUp {
+  0%   { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+@keyframes slideInLeft {
+  0%   { opacity: 0; transform: translateX(-40px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+@keyframes diyaGlow {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(245,184,48,0.25), 0 0 16px 4px rgba(232,130,10,0.3), 0 4px 20px rgba(196,68,10,0.3); }
+  50%       { box-shadow: inset 0 0 0 2px rgba(245,184,48,0.4),  0 0 32px 12px rgba(232,130,10,0.55), 0 8px 32px rgba(196,68,10,0.4); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes stamp {
+  0%   { opacity: 0; transform: scale(2.5) rotate(-20deg); }
+  60%  { opacity: 1; transform: scale(0.9) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes curtain {
+  0%   { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0% 0 0); }
+}
+@keyframes unroll {
+  0%   { opacity: 0; transform: scaleY(0); transform-origin: top; }
+  100% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes waveform {
+  0%, 100% { height: 8px; }
+  50%       { height: 32px; }
 }
 
-/* Animated waveform for voice recording */
+/* ─── Waveform Bars ─── */
 .waveform-bar {
   animation: waveform 1.2s infinite ease-in-out;
+  background: var(--color-amber);
 }
 .waveform-bar:nth-child(1) { animation-delay: 0s; }
 .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
@@ -165,15 +414,85 @@
 .waveform-bar:nth-child(7) { animation-delay: 0.6s; }
 .waveform-bar:nth-child(8) { animation-delay: 0.7s; }
 
-@keyframes waveform {
-  0%, 100% { height: 8px; }
-  50% { height: 32px; }
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: rgba(196,68,10,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(196,68,10,0.5); }
+
+/* ─── Modals ─── */
+.modal-overlay  { animation: fadeIn 0.2s ease-out forwards; }
+.modal-content  { animation: slideUp 0.3s ease-out forwards; }
+
+/* ─── Loading Spinner ─── */
+.spinner-heritage {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(232,130,10,0.2);
+  border-top-color: var(--color-amber);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* Modal overlay */
-.modal-overlay {
-  animation: fadeIn 0.2s ease-out forwards;
+/* ─── Dark section override ─── */
+.section-dark {
+  background: var(--color-ink);
+  color: var(--color-bg);
 }
-.modal-content {
-  animation: slideUp 0.3s ease-out forwards;
+
+.section-dark h2, .section-dark h3 {
+  color: var(--color-bg);
+}
+
+/* ─── Stamp animation ─── */
+.stamp-submitted {
+  animation: stamp 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+}
+
+/* ─── Language toggle pill ─── */
+.lang-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid var(--color-primary);
+}
+
+.lang-toggle button {
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 200ms ease;
+  font-family: 'Hind Siliguri', sans-serif;
+}
+
+.lang-toggle button.active {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.lang-toggle button:not(.active) {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.lang-toggle button:not(.active):hover {
+  background: rgba(196,68,10,0.1);
+}
+
+/* Nav-specific toggle (light text version) */
+.lang-toggle-nav {
+  border-color: rgba(253,236,200,0.4);
+}
+
+.lang-toggle-nav button.active {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.lang-toggle-nav button:not(.active) {
+  color: var(--color-bg);
 }
