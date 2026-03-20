@@ -10,7 +10,7 @@ export default function PublicLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState('email'); // Renamed from loginMethod
+  const [activeTab, setActiveTab] = useState('email'); // Renamed from activeTab
   const [formData, setFormData] = useState({
     email: '', // Changed from emailOrPhone
     password: '',
@@ -126,9 +126,9 @@ export default function PublicLogin() {
         <div className="glass-card p-8 animate-slide-up">
           <div className="flex bg-navy-800/60 rounded-xl p-1 mb-6">
             <button
-              onClick={() => setLoginMethod('email')}
+              onClick={() => setActiveTab('email')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                loginMethod === 'email'
+                activeTab === 'email'
                   ? 'bg-gradient-to-r from-saffron-500 to-saffron-600 text-white shadow-lg shadow-saffron-500/25'
                   : 'text-gray-400 hover:text-white'
               }`}
@@ -137,9 +137,9 @@ export default function PublicLogin() {
               {t('login.emailTab')}
             </button>
             <button
-              onClick={() => { setLoginMethod('otp'); setOtpSent(false); }}
+              onClick={() => { setActiveTab('otp'); setOtpSent(false); }}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                loginMethod === 'otp'
+                activeTab === 'otp'
                   ? 'bg-gradient-to-r from-saffron-500 to-saffron-600 text-white shadow-lg shadow-saffron-500/25'
                   : 'text-gray-400 hover:text-white'
               }`}
@@ -149,8 +149,8 @@ export default function PublicLogin() {
             </button>
           </div>
 
-          <form onSubmit={loginMethod === 'email' ? handleSubmit : (otpSent ? handleSubmit : handleSendOtp)} className="space-y-5">
-            {loginMethod === 'email' ? (
+          <form onSubmit={activeTab === 'email' ? handleEmailLogin : (otpSent ? handleOtpLogin : handleSendOtp)} className="space-y-5">
+            {activeTab === 'email' ? (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">{t('login.emailLabel')}</label>
@@ -160,8 +160,8 @@ export default function PublicLogin() {
                     </div>
                     <input
                       type="text"
-                      name="emailOrPhone"
-                      value={formData.emailOrPhone}
+                    name="email"
+                    value={formData.email}
                       onChange={handleChange}
                       placeholder={t('login.emailPlaceholder')}
                       className="w-full pl-12 pr-4 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
@@ -205,8 +205,8 @@ export default function PublicLogin() {
                     </div>
                     <input
                       type="tel"
-                      name="emailOrPhone"
-                      value={formData.emailOrPhone}
+                    name="phone"
+                    value={formData.phone}
                       onChange={handleChange}
                       placeholder={t('login.mobilePlaceholder')}
                       className="w-full pl-12 pr-4 py-3.5 bg-navy-800/60 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-saffron-500/50 focus:ring-2 focus:ring-saffron-500/20 transition-all duration-300"
@@ -248,7 +248,7 @@ export default function PublicLogin() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {loginMethod === 'email' ? t('login.loginBtn') : (otpSent ? t('login.verifyLogin') : t('login.sendOtp'))} <ArrowRight className="w-5 h-5" />
+                  {activeTab === 'email' ? t('login.loginBtn') : (otpSent ? t('login.verifyLogin') : t('login.sendOtp'))} <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>

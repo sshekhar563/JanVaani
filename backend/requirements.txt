@@ -7,6 +7,10 @@ pydantic
 passlib[bcrypt]
 PyJWT
 python-multipart
+requests
+whisper
+transformers
+torchaudio
 
 # AI Pothole Detection dependencies
 opencv-python-headless

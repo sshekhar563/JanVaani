@@ -1,19 +1,21 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
+import os
+from datetime import datetime, timedelta, timezone
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
-import jwt
-from datetime import datetime, timedelta, timezone
-from typing import Optional
 from pydantic import BaseModel
-import os
+
+import jwt
 import uuid
 import base64
 
-from whisper_service import transcribe_audio
+from models import ComplaintRequest, Token, UserCreate, UserLogin
 from nlp_component import analyze_complaint
-from models import UserCreate, UserLogin, Token
+from whisper_service import transcribe_audio
 from pothole_detector import PotholeDetector
 
 app = FastAPI(
@@ -56,15 +58,14 @@ async def startup_db():
     global pothole_detector
     try:
         client = AsyncIOMotorClient(MONGODB_URL, serverSelectionTimeoutMS=3000)
-        # Test the connection
         await client.admin.command("ping")
         db = client.janvaani_db
         users_collection = db.users
         complaints_collection = db.complaints
         pothole_reports_collection = db.pothole_reports
-        print("✅ Connected to MongoDB")
+        print("âœ… Connected to MongoDB")
     except Exception as e:
-        print(f"⚠️  MongoDB not available ({e}). Auth endpoints will return errors.")
+        print(f"âš ï¸  MongoDB not available ({e}). Auth endpoints will return errors.")
         client = None
         db = None
         users_collection = None
@@ -158,6 +159,10 @@ async def signup(user: UserCreate):
         print(f"❌ SIGNUP ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/")
+def health_check():
+    return {"status": "alive"}
+
 
 @app.post("/api/auth/login", response_model=Token)
 async def login(user_data: UserLogin):
@@ -204,17 +209,24 @@ async def analyze_text(req: AnalyzeRequest):
 # Voice Report Endpoint
 # -----------------------------------------------------------------------
 
-@app.post("/api/voice-report")
-async def voice_report(audio: UploadFile = File(...)):
-    file_location = f"temp/{audio.filename}"
+async def _handle_voice_report(audio: UploadFile, language: Optional[str]):
+    temp_dir = "temp"
+    os.makedirs(temp_dir, exist_ok=True)
+    file_location = os.path.join(temp_dir, audio.filename)
 
     with open(file_location, "wb") as f:
         f.write(await audio.read())
 
-    transcript = transcribe_audio(file_location)
-    nlp_result = analyze_complaint(transcript["text"])
+    try:
+        transcript = transcribe_audio(file_location, language_hint=language)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Speech transcription failed: {exc}")
 
-    # Clean up temp file
+    nlp_result = analyze_complaint(
+        transcript.get("text", ""),
+        language_hint=transcript.get("language") or language,
+    )
+
     try:
         os.remove(file_location)
     except OSError:
@@ -223,6 +235,35 @@ async def voice_report(audio: UploadFile = File(...)):
     return {
         "transcript": transcript,
         "analysis": nlp_result,
+    }
+
+
+@app.post("/api/voice-report")
+async def voice_report(
+    audio: UploadFile = File(...),
+    language: Optional[str] = Form(None),
+):
+    return await _handle_voice_report(audio, language)
+
+
+@app.post("/voice-report")
+async def voice_report_alias(
+    audio: UploadFile = File(...),
+    language: Optional[str] = Form(None),
+):
+    return await _handle_voice_report(audio, language)
+
+
+@app.post("/analyze")
+async def analyze_text(payload: ComplaintRequest):
+    if not payload.text:
+        raise HTTPException(status_code=400, detail="text is required")
+
+    analysis_result = analyze_complaint(payload.text, language_hint=payload.language)
+
+    return {
+        "analysis": analysis_result,
+        "transcript": payload.text
     }
 
 
@@ -363,4 +404,5 @@ async def get_pothole_stats():
         "medium": medium,
         "low": low,
         "detected": detected,
-    }
+    }
+

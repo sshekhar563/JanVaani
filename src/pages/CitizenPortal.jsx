@@ -5,26 +5,145 @@ import {
   AlertCircle, Loader2, X
 } from 'lucide-react';
 import { categories, issues } from '../data/mockData';
-import PipelineFlow, { pipelineSteps } from '../components/PipelineFlow';
+import PipelineFlow from '../components/PipelineFlow';
+import { pipelineSteps } from '../data/pipelineSteps';
 import Footer from '../components/Footer';
 import PotholeDetectionCard from '../components/PotholeDetectionCard';
 import { useTranslation } from 'react-i18next';
 
-function VoiceInput() {
+const LANGUAGE_OPTIONS = [
+  { label: 'Auto detect (Whisper)', value: 'auto' },
+  { label: 'Hindi', value: 'Hindi' },
+  { label: 'Marathi', value: 'Marathi' },
+  { label: 'Punjabi', value: 'Punjabi' },
+  { label: 'Bengali', value: 'Bengali' },
+  { label: 'Urdu', value: 'Urdu' },
+  { label: 'Tamil', value: 'Tamil' },
+  { label: 'Kannada', value: 'Kannada' },
+  { label: 'Telugu', value: 'Telugu' },
+  { label: 'Gujarati', value: 'Gujarati' },
+  { label: 'Malayalam', value: 'Malayalam' },
+  { label: 'Odia', value: 'Odia' },
+  { label: 'Haryanvi', value: 'Haryanvi' },
+  { label: 'Rajasthani', value: 'Rajasthani' },
+  { label: 'Bhojpuri', value: 'Bhojpuri' },
+  { label: 'Dogri', value: 'Dogri' },
+  { label: 'Assamese', value: 'Assamese' },
+  { label: 'Bodo', value: 'Bodo' },
+  { label: 'Manipuri', value: 'Manipuri' },
+  { label: 'Sindhi', value: 'Sindhi' },
+  { label: 'Sanskrit', value: 'Sanskrit' },
+  { label: 'Kashmiri', value: 'Kashmiri' },
+  { label: 'Santali', value: 'Santali' },
+  { label: 'English', value: 'English' },
+];
+
+function VoiceInput({ onResult }) {
   const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
+  const [status, setStatus] = useState(t('report.tapToRecord', 'Tap to start recording'));
   const [transcript, setTranscript] = useState('');
+  const recorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('auto');
+
+  const cleanupStream = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      cleanupStream();
+      if (recorderRef.current?.state === 'recording') {
+        recorderRef.current.stop();
+      }
+    };
+  }, []);
+
+  const sendRecording = async (blob) => {
+    setStatus(t('report.processing', 'Uploading to Whisper...'));
+
+      try {
+        const formData = new FormData();
+        formData.append('audio', blob, `complaint-${Date.now()}.webm`);
+        if (selectedLanguage && selectedLanguage !== 'auto') {
+          formData.append('language', selectedLanguage);
+        }
+
+        const response = await fetch('http://localhost:8000/voice-report', {
+          method: 'POST',
+          body: formData,
+      });
+
+      if (!response.ok) throw new Error('Whisper service failed');
+
+      const data = await response.json();
+      const transcriptText = data.transcript?.text ?? data.transcript ?? '';
+      setTranscript(transcriptText);
+      setStatus(t('report.transcriptionReady', 'Transcription ready'));
+      onResult?.({
+        transcript: { text: transcriptText, language: data.transcript?.language },
+        analysis: data.analysis,
+      });
+    } catch (err) {
+      console.error(err);
+      setStatus(t('report.transcriptionFailed', 'Unable to transcribe.'));
+    }
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setStatus(t('report.tapeNotSupported', 'Microphone access not supported.'));
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        cleanupStream();
+        if (!chunks.length) {
+          setStatus(t('report.noAudio', 'No audio captured.'));
+          return;
+        }
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        sendRecording(blob);
+      };
+
+      recorder.start();
+      recorderRef.current = recorder;
+      setRecording(true);
+      setStatus(t('report.listening', 'Recording...'));
+      setTranscript('');
+    } catch (err) {
+      console.error(err);
+      setStatus(t('report.microphoneError', 'Microphone access denied.'));
+    }
+  };
+
+  const stopRecording = () => {
+    if (recorderRef.current?.state === 'recording') {
+      recorderRef.current.stop();
+    }
+    setRecording(false);
+    setStatus(t('report.processing', 'Processing...'));
+  };
 
   const handleToggle = () => {
-    if (!recording) {
-      setRecording(true);
-      setTranscript('');
-      setTimeout(() => {
-        setTranscript('सड़क पर बहुत बड़ा गड्ढा है... MG रोड पर... बस स्टॉप के पास... बहुत खतरनाक...');
-        setRecording(false);
-      }, 4000);
+    if (recording) {
+      stopRecording();
     } else {
-      setRecording(false);
+      startRecording();
     }
   };
 
@@ -41,9 +160,7 @@ function VoiceInput() {
         >
           <Mic className={`w-10 h-10 text-white ${recording ? 'animate-pulse' : ''}`} />
         </button>
-        <p className="text-sm text-gray-400 mt-4">
-          {recording ? t('report.listening') : t('report.tapToRecord')}
-        </p>
+        <p className="text-sm text-gray-400 mt-4">{status}</p>
         
         {/* Waveform */}
         {recording && (
@@ -54,15 +171,21 @@ function VoiceInput() {
           </div>
         )}
 
-        {/* Dialect selector */}
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-500">{t('report.dialect')}</span>
-          <div className="flex gap-2">
-            {['Hindi', 'Haryanvi', 'Punjabi', 'Urdu', 'English'].map(d => (
-              <button key={d} className="px-3 py-1 text-xs rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-saffron-500/30 transition-all">
-                {d}
-              </button>
-            ))}
+        {/* Language selector */}
+        <div className="mt-6">
+          <p className="text-xs text-gray-500 uppercase tracking-[0.3em] text-center">{t('report.languageLabel', 'Language')}</p>
+          <div className="mt-2">
+            <select
+              className="w-full bg-navy-900/70 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-saffron-500/70 transition"
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+            >
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -311,6 +434,7 @@ export default function CitizenPortal() {
   const [submitted, setSubmitted] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [formFeedback, setFormFeedback] = useState('');
   const [formData, setFormData] = useState({
     category: '',
     location: '',
@@ -350,6 +474,13 @@ export default function CitizenPortal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const trimmedText = (formData.description || '').trim();
+    if (!trimmedText) {
+      setFormFeedback(t('report.textRequired', 'Please enter a description before submitting.'));
+      return;
+    }
+
+    setFormFeedback('');
     startPipeline();
     setAnalysis(null);
     setLoadingAI(true);
@@ -362,14 +493,16 @@ export default function CitizenPortal() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: formData.description,
+          text: trimmedText,
           location: formData.location,
           category: formData.category,
         }),
       });
       const data = await res.json();
-      finalAnalysis = data;
-      finalTranscript = data.transcript ?? finalTranscript;
+      const transcriptText = data.transcript ?? trimmedText ?? getTranscriptFallback();
+      const aiAnalysis = data.analysis ?? data;
+      finalAnalysis = aiAnalysis;
+      finalTranscript = transcriptText;
     } catch (err) {
       console.warn("Backend unavailable, using fallback analysis:", err);
       // Graceful fallback with realistic mock results
@@ -427,6 +560,24 @@ export default function CitizenPortal() {
     setTimeout(() => setSubmitted(false), 5200);
   };
 
+  const handleVoiceResult = (payload) => {
+    if (!payload?.analysis) return;
+    const transcriptText = payload.transcript?.text ?? payload.transcript ?? '';
+    setFormData((prev) => ({
+      ...prev,
+      description: transcriptText,
+      location: payload.analysis.location ?? prev.location,
+      category: payload.analysis.category ?? prev.category,
+    }));
+    setAnalysis({
+      ...payload.analysis,
+      transcript: transcriptText,
+    });
+    setSubmitted(true);
+    startPipeline();
+    setTimeout(() => setSubmitted(false), 5200);
+  };
+
   const modes = [
     { key: 'voice', label: t('report.voiceTab'), icon: Mic },
     { key: 'text', label: t('report.textTab'), icon: Type },
@@ -475,7 +626,7 @@ export default function CitizenPortal() {
                   ))}
                 </div>
 
-                {inputMode === 'voice' && <VoiceInput />}
+                {inputMode === 'voice' && <VoiceInput onResult={handleVoiceResult} />}
                 {inputMode === 'text' && <TextInput formData={formData} setFormData={setFormData} />}
                 {inputMode === 'image' && <ImageInput onDetectionResult={setDetectionResult} />}
               </div>
@@ -536,6 +687,10 @@ export default function CitizenPortal() {
                   </>
                 )}
               </button>
+
+              {formFeedback && (
+                <p className="text-xs text-red-400 mt-2">{formFeedback}</p>
+              )}
 
               {submitted && (
                 <div className="bg-trust-500/10 border border-trust-500/20 rounded-xl p-4 flex items-start gap-3 animate-slide-up">

@@ -284,7 +284,6 @@ function AnalyticsView() {
 }
 
 export default function Dashboard() {
-  const { t } = useTranslation();
   const [activeView, setActiveView] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
