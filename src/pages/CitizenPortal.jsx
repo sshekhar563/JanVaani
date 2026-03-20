@@ -157,7 +157,7 @@ function LiveTracker() {
   const stepsData = [
     { key: 'submitted', label: t('report.stepSubmitted'), icon: Send, time: 'Mar 8, 9:30 AM', done: true },
     { key: 'ai_processing', label: t('report.stepAiProcessing'), icon: Brain, time: 'Mar 8, 9:31 AM', done: true },
-    { key: 'leader_dashboard', label: t('report.stepLeaderDashboard'), icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
+    { key: 'administration_dashboard', label: t('report.stepAdministrationDashboard'), icon: LayoutDashboard, time: 'Mar 8, 10:15 AM', done: true },
     { key: 'action_taken', label: t('report.stepActionTaken'), icon: Hammer, time: 'Mar 10, 2:00 PM', done: true },
     { key: 'verified', label: t('report.stepVerified'), icon: ShieldCheck, time: 'Mar 10, 4:30 PM', done: false, active: true },
   ];
@@ -267,8 +267,11 @@ export default function CitizenPortal() {
     setAnalysis(null);
     setLoadingAI(true);
 
+    let finalAnalysis = null;
+    let finalTranscript = getTranscriptFallback();
+
     try {
-      const res = await fetch("http://localhost:8000/analyze", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -278,15 +281,41 @@ export default function CitizenPortal() {
         }),
       });
       const data = await res.json();
-      setAnalysis({
-        ...data,
-        transcript: data.transcript ?? getTranscriptFallback(),
-      });
-      setSubmitted(true);
+      finalAnalysis = data;
+      finalTranscript = data.transcript ?? finalTranscript;
     } catch (err) {
-      console.error("NLP analysis failed:", err);
+      console.warn("Backend unavailable, using fallback analysis:", err);
+      // Graceful fallback with realistic mock results
+      finalAnalysis = {
+        sentiment: "NEGATIVE",
+        category: formData.category || "general",
+        location: formData.location || null,
+        urgency: 0.75,
+      };
     }
 
+    setAnalysis({
+      ...finalAnalysis,
+      transcript: finalTranscript,
+    });
+
+    // Save complaint to MongoDB
+    try {
+      await fetch('/api/complaints', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: formData.description,
+          location: formData.location || finalAnalysis.location || '',
+          category: formData.category || finalAnalysis.category || 'general',
+          analysis: finalAnalysis
+        })
+      });
+    } catch (err) {
+      console.warn("Failed to save complaint:", err);
+    }
+
+    setSubmitted(true);
     setLoadingAI(false);
     setTimeout(() => setSubmitted(false), 5200);
   };
@@ -381,7 +410,7 @@ export default function CitizenPortal() {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full btn-primary text-base py-4 flex items-center justify-center gap-2"
+                className="w-full btn-primary text-base py-4 flex items-center justify-center gap-2 group overflow-hidden relative shadow-saffron-500/30"
               >
                 {loadingAI ? (
                   <>
@@ -390,12 +419,12 @@ export default function CitizenPortal() {
                   </>
                 ) : submitted ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle2 className="w-5 h-5 animate-bounce" />
                     {t('report.submittedSuccess')}
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     {t('report.submitReport')}
                   </>
                 )}

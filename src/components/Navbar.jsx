@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Shield, LogIn, UserPlus, Languages } from 'lucide-react';
+import { Menu, X, Shield, LogIn, UserPlus, Languages, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const { t, i18n } = useTranslation();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const toggleLanguage = () => {
     const next = i18n.language === 'en' ? 'hi' : 'en';
@@ -60,24 +62,32 @@ export default function Navbar() {
               <span>{isHindi ? 'EN' : 'हिं'}</span>
             </button>
 
-            <Link
-              to="/login"
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
-                location.pathname === '/login'
-                  ? 'text-white bg-white/15 border border-white/20'
-                  : 'text-gray-300 hover:text-white border border-white/10 hover:border-white/30 hover:bg-white/5'
-              }`}
-            >
-              <LogIn className="w-4 h-4" />
-              {t('navbar.login')}
-            </Link>
-            <Link
-              to="/signup"
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 flex items-center gap-2 bg-gradient-to-r from-saffron-500 to-saffron-600 shadow-lg shadow-saffron-500/25 hover:shadow-saffron-500/40 hover:-translate-y-0.5"
-            >
-              <UserPlus className="w-4 h-4" />
-              {t('navbar.signUp')}
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 btn-outline border-none text-red-400 hover:text-red-300"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 btn-outline border-none`}
+                >
+                  <LogIn className="w-4 h-4" />
+                  {t('navbar.login')}
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 flex items-center gap-2 btn-primary border-none"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  {t('navbar.signUp')}
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -103,12 +113,20 @@ export default function Navbar() {
               <Languages className="w-4 h-4" />
               {isHindi ? 'Switch to English' : 'हिंदी में बदलें'}
             </button>
-            <Link to="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-              <LogIn className="w-4 h-4" /> {t('navbar.login')}
-            </Link>
-            <Link to="/signup" onClick={() => setIsOpen(false)} className="block btn-primary text-center text-sm mt-2">
-              {t('navbar.signUp')}
-            </Link>
+            {isAuthenticated ? (
+              <button onClick={() => { logout(); setIsOpen(false); }} className="flex w-full items-center gap-2 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-white/5 rounded-xl transition-all">
+                <LogOut className="w-4 h-4" /> Logout
+              </button>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+                  <LogIn className="w-4 h-4" /> {t('navbar.login')}
+                </Link>
+                <Link to="/signup" onClick={() => setIsOpen(false)} className="block btn-primary text-center text-sm mt-2">
+                  {t('navbar.signUp')}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

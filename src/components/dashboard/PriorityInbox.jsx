@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   MapPin, Clock, Brain, ChevronRight, X, AlertTriangle, 
   TrendingUp, Mic, Type, Image, Shield
@@ -110,12 +110,48 @@ function IssueModal({ issue, onClose }) {
 
 export default function PriorityInbox() {
   const [selectedIssue, setSelectedIssue] = useState(null);
-  const sortedIssues = [...issues].sort((a, b) => b.aiScore - a.aiScore);
+  const [liveIssues, setLiveIssues] = useState([...issues]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/complaints')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map(c => ({
+            id: c.tracking_id,
+            title: c.category.charAt(0).toUpperCase() + c.category.slice(1) + ' Issue',
+            description: c.description,
+            location: c.location,
+            category: c.category,
+            reportedBy: 'Citizen',
+            inputMode: 'text',
+            aiAnalysis: `Sentiment: ${c.analysis.sentiment}, Urgency: ${c.analysis.urgency}`,
+            urgencyScore: c.analysis.urgency * 100,
+            publicImpact: c.analysis.sentiment === 'NEGATIVE' ? 'High' : 'Medium',
+            sentiment: c.analysis.sentiment,
+            sentimentScore: c.analysis.sentiment === 'NEGATIVE' ? '-0.8' : '0.0',
+            aiScore: Math.round(c.analysis.urgency * 100),
+            status: c.status?.toLowerCase().replace(' ', '_') || 'submitted',
+            tags: [c.analysis.urgency > 0.7 ? 'High Priority' : 'Geotagged'],
+            reportedAt: c.created_at,
+          }));
+          setLiveIssues(formatted);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.warn('Failed to fetch real issues, falling back to mock data:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  const sortedIssues = [...liveIssues].sort((a, b) => b.aiScore - a.aiScore);
 
   const statusColors = {
     submitted: 'bg-gray-500/20 text-gray-400',
     ai_processing: 'bg-blue-500/20 text-blue-400',
-    leader_dashboard: 'bg-saffron-500/20 text-saffron-400',
+    administration_dashboard: 'bg-saffron-500/20 text-saffron-400',
     action_taken: 'bg-trust-500/20 text-trust-400',
     verified: 'bg-trust-500/20 text-trust-300',
   };
@@ -123,7 +159,7 @@ export default function PriorityInbox() {
   const statusLabels = {
     submitted: 'Submitted',
     ai_processing: 'AI Processing',
-    leader_dashboard: 'In Review',
+    administration_dashboard: 'In Review',
     action_taken: 'Action Taken',
     verified: 'Verified',
   };

@@ -40,7 +40,7 @@
   }
 
   .btn-primary {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg;
+    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg active:scale-95;
     background: linear-gradient(to right, #f97316, #ea580c);
     box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.25);
   }
@@ -49,12 +49,9 @@
     box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.3);
     transform: translateY(-2px);
   }
-  .btn-primary:active {
-    transform: translateY(0);
-  }
 
   .btn-secondary {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg;
+    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg active:scale-95;
     background: linear-gradient(to right, #1e40af, #1a2744);
     border: 1px solid rgba(37, 99, 235, 0.3);
     box-shadow: 0 10px 15px -3px rgba(26, 39, 68, 0.25);
@@ -64,20 +61,19 @@
     box-shadow: 0 20px 25px -5px rgba(26, 39, 68, 0.3);
     transform: translateY(-2px);
   }
-  .btn-secondary:active {
-    transform: translateY(0);
-  }
 
   .btn-outline {
-    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300;
+    @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 active:scale-95;
     border: 2px solid rgba(255, 255, 255, 0.4);
   }
   .btn-outline:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
   }
-  .btn-outline:active {
-    transform: translateY(0);
+
+  .btn-admin {
+    @apply relative overflow-hidden text-white font-bold py-3 px-6 rounded-xl transition-all duration-500 shadow-xl active:scale-95;
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
   }
 
   .card-hover {

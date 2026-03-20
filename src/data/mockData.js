@@ -32,7 +32,7 @@ export const issues = [
     aiScore: 88,
     sentiment: 'Very Negative',
     sentimentScore: -0.91,
-    status: 'leader_dashboard',
+    status: 'administration_dashboard',
     tags: ['High Priority', 'Geo-tagged'],
     description: 'No water supply for 3 consecutive days in Block C, Sector 4. Over 200 families affected. Multiple elderly residents depend on regular water supply for medical needs.',
     aiAnalysis: 'NLP analysis shows escalating frustration across 47 complaints. Water board maintenance records indicate aging pipeline (installed 1998). Recommend emergency tanker dispatch + long-term pipeline replacement.',
@@ -98,7 +98,7 @@ export const issues = [
     aiScore: 85,
     sentiment: 'Panic',
     sentimentScore: -0.95,
-    status: 'leader_dashboard',
+    status: 'administration_dashboard',
     tags: ['Misinformation Alert', 'High Priority'],
     description: 'Viral WhatsApp message claiming District Hospital is shutting down permanently. Causing widespread panic among residents. Hospital administration confirms this is completely false.',
     aiAnalysis: 'MISINFORMATION DETECTED. Cross-referenced with official hospital records, health department database, and government gazette. No closure order exists. Message origin traced to unverified account. Recommend official rebuttal + social media counter-campaign.',
@@ -260,7 +260,7 @@ export const dashboardStats = {
 export const statusSteps = [
   { key: 'submitted', label: 'Submitted', icon: 'send' },
   { key: 'ai_processing', label: 'AI Processing', icon: 'brain' },
-  { key: 'leader_dashboard', label: 'Leader Dashboard', icon: 'layout-dashboard' },
+  { key: 'administration_dashboard', label: 'Administration Dashboard', icon: 'layout-dashboard' },
   { key: 'action_taken', label: 'Action Taken', icon: 'hammer' },
   { key: 'verified', label: 'Verified Proof', icon: 'shield-check' },
 ];

@@ -38,7 +38,7 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('footer.platform')}</h4>
             <ul className="space-y-2.5">
               <li><Link to="/report" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.reportIssue')}</Link></li>
-              <li><Link to="/dashboard" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.leaderDashboard')}</Link></li>
+              <li><Link to="/dashboard" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.administrationDashboard')}</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.trackIssue')}</a></li>
               <li><a href="#" className="text-gray-400 hover:text-saffron-400 text-sm transition-colors">{t('footer.apiDocs')}</a></li>
             </ul>

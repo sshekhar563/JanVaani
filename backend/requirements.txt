@@ -1,0 +1,17 @@
+# Core dependencies
+fastapi
+uvicorn
+motor
+pymongo
+pydantic
+passlib[bcrypt]
+PyJWT
+python-multipart
+
+# Optional: ML dependencies (large downloads, not required for basic functionality)
+# Install these for full NLP/Whisper capabilities:
+# openai-whisper
+# torch
+# transformers
+# spacy
+# After installing spacy, run: python -m spacy download en_core_web_sm

@@ -1,6 +1,37 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 
+# -----------------------------
+# Auth Models
+# -----------------------------
+
+class UserBase(BaseModel):
+    email: str
+    full_name: str
+
+class UserCreate(UserBase):
+    password: str
+    role: Literal["public", "admin"] = "public"
+    registration_key: Optional[str] = None  # For admin
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserInDB(UserBase):
+    hashed_password: str
+    role: Literal["public", "admin"] = "public"
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+
+# ... (rest of the models)
+
 
 # -----------------------------
 # Request Model
@@ -83,10 +114,10 @@ class NLPAnalysis(BaseModel):
 
     priority: PriorityScore
 
-    detected_location: Optional[str]
-
     risk_flags: RiskFlags
 
-    summary: Optional[str]
+    detected_location: Optional[str] = None
 
-    recommended_action: Optional[str]
+    summary: Optional[str] = None
+
+    recommended_action: Optional[str] = None

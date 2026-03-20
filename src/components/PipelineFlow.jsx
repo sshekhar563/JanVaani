@@ -31,7 +31,7 @@ export const pipelineSteps = [
   },
   {
     key: 'dashboard',
-    label: 'Leader Dashboard',
+    label: 'Administration Dashboard',
     description: 'Routed to local authority',
     icon: LayoutDashboard,
     color: 'navy',

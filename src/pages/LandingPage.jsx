@@ -128,8 +128,12 @@ export default function LandingPage() {
               <Link to="/report" className="btn-primary text-base px-8 py-4 flex items-center gap-2 w-full sm:w-auto justify-center">
                 {t('landing.reportBtn')} <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link to="/dashboard" className="btn-outline text-base px-8 py-4 flex items-center gap-2 w-full sm:w-auto justify-center">
-                <Shield className="w-5 h-5" /> {t('landing.leaderLoginBtn')}
+              <Link to="/admin/login" className="btn-admin text-base px-8 py-4 flex items-center gap-2 w-full sm:w-auto justify-center group relative overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/25">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 group-hover:from-indigo-500 group-hover:to-violet-500 transition-all duration-300"></div>
+                <div className="relative flex items-center gap-2">
+                  <Shield className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" /> 
+                  <span className="font-semibold tracking-wide">{t('landing.administrationLoginBtn')}</span>
+                </div>
               </Link>
             </div>
 
