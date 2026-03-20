@@ -1,9 +1,10 @@
-import { LayoutDashboard, AlertCircle, CheckCircle2, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, CheckCircle2, BarChart3, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, collapsed, setCollapsed }) {
   const links = [
     { key: 'overview', label: 'Overview', icon: LayoutDashboard },
     { key: 'issues', label: 'Issues', icon: AlertCircle },
+    { key: 'potholes', label: 'Pothole Detection', icon: Camera },
     { key: 'verified', label: 'Verified Work', icon: CheckCircle2 },
     { key: 'analytics', label: 'Analytics', icon: BarChart3 },
   ];

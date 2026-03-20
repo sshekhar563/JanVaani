@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
 import jwt
@@ -7,10 +8,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from pydantic import BaseModel
 import os
+import uuid
+import base64
 
 from whisper_service import transcribe_audio
 from nlp_component import analyze_complaint
 from models import UserCreate, UserLogin, Token
+from pothole_detector import PotholeDetector
 
 app = FastAPI(
     title="Jan Vaani API",
@@ -23,6 +27,8 @@ MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 SECRET_KEY = os.getenv("SECRET_KEY", "janvaani_secret_key_change_me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
+UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+DATASET_BASE = os.path.join(os.path.dirname(__file__), "..", "data", "India")
 
 # CORS
 app.add_middleware(
@@ -38,11 +44,16 @@ client: Optional[AsyncIOMotorClient] = None
 db = None
 users_collection = None
 complaints_collection = None
+pothole_reports_collection = None
+
+# Pothole detector – initialised with dataset for annotation lookup
+pothole_detector: Optional[PotholeDetector] = None
 
 
 @app.on_event("startup")
 async def startup_db():
-    global client, db, users_collection, complaints_collection
+    global client, db, users_collection, complaints_collection, pothole_reports_collection
+    global pothole_detector
     try:
         client = AsyncIOMotorClient(MONGODB_URL, serverSelectionTimeoutMS=3000)
         # Test the connection
@@ -50,6 +61,7 @@ async def startup_db():
         db = client.janvaani_db
         users_collection = db.users
         complaints_collection = db.complaints
+        pothole_reports_collection = db.pothole_reports
         print("✅ Connected to MongoDB")
     except Exception as e:
         print(f"⚠️  MongoDB not available ({e}). Auth endpoints will return errors.")
@@ -57,21 +69,35 @@ async def startup_db():
         db = None
         users_collection = None
         complaints_collection = None
+        pothole_reports_collection = None
 
-    # Ensure temp directory exists for voice uploads
+    # Ensure directories exist
     os.makedirs("temp", exist_ok=True)
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
+
+    # Initialise pothole detector
+    dataset_path = DATASET_BASE if os.path.isdir(DATASET_BASE) else None
+    pothole_detector = PotholeDetector(dataset_base=dataset_path)
+
+# Mount uploads directory for serving static images
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 
-# Auth utilities
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
-
+# Auth utilities (Replaced passlib with direct bcrypt for v5.0 compatibility)
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password[:72], hashed_password)
-
+    try:
+        if isinstance(hashed_password, str):
+            hashed_password = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(plain_password[:72].encode('utf-8'), hashed_password)
+    except Exception:
+        return False
 
 def get_password_hash(password):
-    return pwd_context.hash(password[:72])
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password[:72].encode('utf-8'), salt).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -239,3 +265,102 @@ async def get_complaints():
     for c in complaints:
         c["_id"] = str(c["_id"])
     return complaints
+
+
+# -----------------------------------------------------------------------
+# Pothole Detection Endpoints
+# -----------------------------------------------------------------------
+
+@app.post("/api/detect-pothole")
+async def detect_pothole(image: UploadFile = File(...)):
+    """Detect potholes in an uploaded road image."""
+    if pothole_detector is None:
+        raise HTTPException(status_code=503, detail="Pothole detector not initialised")
+
+    # Read image bytes
+    image_bytes = await image.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Empty image file")
+
+    # Save uploaded image
+    ext = os.path.splitext(image.filename or "img.jpg")[1] or ".jpg"
+    saved_filename = f"{uuid.uuid4().hex}{ext}"
+    saved_path = os.path.join(UPLOADS_DIR, saved_filename)
+    with open(saved_path, "wb") as f:
+        f.write(image_bytes)
+
+    # Run detection
+    result = pothole_detector.detect(image_bytes, filename=image.filename)
+    result["image_url"] = f"/uploads/{saved_filename}"
+    result["original_filename"] = image.filename
+
+    return result
+
+
+class PotholeReportCreate(BaseModel):
+    description: str = ""
+    location: str = ""
+    category: str = "road"
+    image_url: str = ""
+    original_filename: str = ""
+    detection_result: dict = {}
+
+
+@app.post("/api/pothole-reports")
+async def create_pothole_report(report: PotholeReportCreate):
+    """Store a pothole detection report in the database."""
+    if pothole_reports_collection is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    report_dict = report.model_dump() if hasattr(report, "model_dump") else report.dict()
+    report_dict["created_at"] = datetime.now(timezone.utc)
+    report_dict["status"] = "Pending"
+
+    # Extract priority from detection result
+    detection = report_dict.get("detection_result", {})
+    report_dict["priority"] = detection.get("priority", "LOW")
+    report_dict["detected"] = detection.get("detected", False)
+    report_dict["confidence"] = detection.get("confidence", 0)
+    report_dict["label"] = detection.get("label", "Unknown")
+
+    # Generate tracking ID
+    count = await pothole_reports_collection.count_documents({})
+    report_dict["tracking_id"] = f"PH-2024-{(count + 1):03d}"
+
+    result = await pothole_reports_collection.insert_one(report_dict)
+    report_dict["_id"] = str(result.inserted_id)
+
+    return report_dict
+
+
+@app.get("/api/pothole-reports")
+async def get_pothole_reports():
+    """Get all pothole detection reports."""
+    if pothole_reports_collection is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    reports = await pothole_reports_collection.find().sort("created_at", -1).to_list(100)
+    for r in reports:
+        r["_id"] = str(r["_id"])
+    return reports
+
+
+@app.get("/api/pothole-stats")
+async def get_pothole_stats():
+    """Get aggregated pothole detection statistics."""
+    if pothole_reports_collection is None:
+        return {"total": 0, "high": 0, "medium": 0, "low": 0, "detected": 0}
+
+    total = await pothole_reports_collection.count_documents({})
+    high = await pothole_reports_collection.count_documents({"priority": "HIGH"})
+    medium = await pothole_reports_collection.count_documents({"priority": "MEDIUM"})
+    low = await pothole_reports_collection.count_documents({"priority": "LOW"})
+    detected = await pothole_reports_collection.count_documents({"detected": True})
+
+    return {
+        "total": total,
+        "high": high,
+        "medium": medium,
+        "low": low,
+        "detected": detected,
+    }

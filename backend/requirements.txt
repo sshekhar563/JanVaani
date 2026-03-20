@@ -8,6 +8,11 @@ passlib[bcrypt]
 PyJWT
 python-multipart
 
+# AI Pothole Detection dependencies
+opencv-python-headless
+Pillow
+numpy
+
 # Optional: ML dependencies (large downloads, not required for basic functionality)
 # Install these for full NLP/Whisper capabilities:
 # openai-whisper

@@ -6,7 +6,8 @@ import TrustIndex from '../components/dashboard/TrustIndex';
 import ProofOfWork from '../components/dashboard/ProofOfWork';
 import { 
   Bell, Search, User, Calendar, Shield, ChevronDown,
-  BarChart3, TrendingUp, Activity
+  BarChart3, TrendingUp, Activity, Camera, MapPin, Clock,
+  AlertTriangle, Eye
 } from 'lucide-react';
 import { trustIndexData } from '../data/mockData';
 import { useTranslation } from 'react-i18next';
@@ -97,6 +98,122 @@ function OverviewView() {
   );
 }
 
+function PotholeReportsView() {
+  const [reports, setReports] = useState([]);
+  const [stats, setStats] = useState({ total: 0, high: 0, medium: 0, low: 0, detected: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/pothole-reports').then(r => r.json()).catch(() => []),
+      fetch('/api/pothole-stats').then(r => r.json()).catch(() => ({ total: 0, high: 0, medium: 0, low: 0, detected: 0 }))
+    ]).then(([reportsData, statsData]) => {
+      setReports(Array.isArray(reportsData) ? reportsData : []);
+      setStats(statsData);
+      setLoading(false);
+    });
+  }, []);
+
+  const priorityConfig = {
+    HIGH: { bg: 'bg-red-500/15', border: 'border-red-500/30', text: 'text-red-400', dot: 'bg-red-500' },
+    MEDIUM: { bg: 'bg-amber-500/15', border: 'border-amber-500/30', text: 'text-amber-400', dot: 'bg-amber-500' },
+    LOW: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-emerald-400', dot: 'bg-emerald-500' },
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Scans', value: stats.total, color: 'blue' },
+          { label: 'High Priority', value: stats.high, color: 'red' },
+          { label: 'Medium Priority', value: stats.medium, color: 'amber' },
+          { label: 'Low / Clear', value: stats.low, color: 'emerald' },
+        ].map((s, i) => (
+          <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 text-center">
+            <p className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</p>
+            <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Reports List */}
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
+        <div className="p-5 border-b border-white/10 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Camera className="w-5 h-5 text-saffron-400" />
+              Pothole Detection Reports
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">AI-analyzed road images with detection results</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading reports...</div>
+        ) : reports.length === 0 ? (
+          <div className="p-8 text-center">
+            <Camera className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No pothole detection reports yet</p>
+            <p className="text-xs text-gray-600 mt-1">Reports will appear here when citizens upload road images</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {reports.map((report, i) => {
+              const pc = priorityConfig[report.priority] || priorityConfig.LOW;
+              return (
+                <div key={report._id || i} className="flex items-center gap-4 p-4 hover:bg-white/[0.03] transition-all">
+                  {/* Image Thumbnail */}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 border border-white/10">
+                    {report.image_url ? (
+                      <img src={report.image_url} alt="Road" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-gray-600" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-semibold text-white truncate">{report.label || 'Detection Result'}</h4>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${pc.bg} ${pc.border} border ${pc.text}`}>
+                        {report.priority}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" /> {Math.round((report.confidence || 0) * 100)}% confidence
+                      </span>
+                      {report.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {report.location}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {new Date(report.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tracking ID */}
+                  <div className="text-right flex-shrink-0 hidden sm:block">
+                    <p className="text-xs font-mono text-gray-500">{report.tracking_id}</p>
+                    <p className={`text-xs mt-1 px-2 py-0.5 rounded-full ${
+                      report.status === 'Pending' ? 'bg-saffron-500/15 text-saffron-400' : 'bg-trust-500/15 text-trust-400'
+                    }`}>{report.status}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AnalyticsView() {
   const { t } = useTranslation();
   const { trend, trendLabels } = trustIndexData;
@@ -175,6 +292,7 @@ export default function Dashboard() {
     switch (activeView) {
       case 'overview': return <OverviewView />;
       case 'issues': return <PriorityInbox />;
+      case 'potholes': return <PotholeReportsView />;
       case 'verified': return <ProofOfWork />;
       case 'analytics': return <AnalyticsView />;
       default: return <OverviewView />;
