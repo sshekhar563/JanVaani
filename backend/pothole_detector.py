@@ -114,7 +114,7 @@ class PotholeDetector:
             if os.path.isdir(img_dir):
                 self.dataset_images_dir = img_dir
 
-        print(f"🔍 PotholeDetector initialised – {len(self.annotations)} annotations loaded, CV2={CV2_AVAILABLE}")
+        print(f"[PotholeDetector] initialised - {len(self.annotations)} annotations loaded, CV2={CV2_AVAILABLE}")
 
     # ------------------------------------------------------------------
     # Public API

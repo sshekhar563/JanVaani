@@ -5,11 +5,35 @@ import {
 } from 'lucide-react';
 import { issues } from '../../data/mockData';
 
-function IssueModal({ issue, onClose }) {
+function IssueModal({ issue, onClose, onRefresh }) {
+  const [updating, setUpdating] = useState(false);
+
   if (!issue) return null;
 
   const sentimentColor = issue.sentimentScore < -0.7 ? 'text-red-400' : 
                           issue.sentimentScore < -0.4 ? 'text-amber-400' : 'text-yellow-400';
+
+  const updateStatus = async (newStatus) => {
+    try {
+      setUpdating(true);
+      const res = await fetch(`/api/complaints/${issue.actual_id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        onRefresh();
+        onClose();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay" onClick={onClose}>
@@ -95,12 +119,20 @@ function IssueModal({ issue, onClose }) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
-          <button className="flex-1 btn-primary text-sm py-3 flex items-center justify-center gap-2">
-            <Shield className="w-4 h-4" /> Take Action
+        <div className="flex gap-3 mt-4">
+          <button 
+            disabled={updating}
+            onClick={() => updateStatus('In Progress')}
+            className="flex-1 btn-secondary text-sm py-3 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Shield className="w-4 h-4" /> Mark In Progress
           </button>
-          <button className="flex-1 btn-secondary text-sm py-3 flex items-center justify-center gap-2">
-            <TrendingUp className="w-4 h-4" /> Escalate
+          <button 
+            disabled={updating}
+            onClick={() => updateStatus('Resolved')}
+            className="flex-1 btn-primary text-sm py-3 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <TrendingUp className="w-4 h-4" /> Mark Resolved
           </button>
         </div>
       </div>
@@ -113,13 +145,18 @@ export default function PriorityInbox() {
   const [liveIssues, setLiveIssues] = useState([...issues]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/complaints')
+  const fetchIssues = () => {
+    fetch('/api/complaints', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           const formatted = data.map(c => ({
             id: c.tracking_id,
+            actual_id: c._id,
             title: c.category.charAt(0).toUpperCase() + c.category.slice(1) + ' Issue',
             description: c.description,
             location: c.location,
@@ -132,7 +169,7 @@ export default function PriorityInbox() {
             sentiment: c.analysis.sentiment,
             sentimentScore: c.analysis.sentiment === 'NEGATIVE' ? '-0.8' : '0.0',
             aiScore: Math.round(c.analysis.urgency * 100),
-            status: c.status?.toLowerCase().replace(' ', '_') || 'submitted',
+            status: c.status || 'Pending',
             tags: [c.analysis.urgency > 0.7 ? 'High Priority' : 'Geotagged'],
             reportedAt: c.created_at,
           }));
@@ -144,24 +181,24 @@ export default function PriorityInbox() {
         console.warn('Failed to fetch real issues, falling back to mock data:', err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchIssues();
   }, []);
 
   const sortedIssues = [...liveIssues].sort((a, b) => b.aiScore - a.aiScore);
 
   const statusColors = {
-    submitted: 'bg-gray-500/20 text-gray-400',
-    ai_processing: 'bg-blue-500/20 text-blue-400',
-    administration_dashboard: 'bg-amber-500/20 text-amber-400',
-    action_taken: 'bg-teal-500/20 text-teal-400',
-    verified: 'bg-teal-500/20 text-teal-300',
+    'Pending': 'bg-gray-500/20 text-gray-400',
+    'In Progress': 'bg-amber-500/20 text-amber-400',
+    'Resolved': 'bg-teal-500/20 text-teal-400',
   };
 
   const statusLabels = {
-    submitted: 'Submitted',
-    ai_processing: 'AI Processing',
-    administration_dashboard: 'In Review',
-    action_taken: 'Action Taken',
-    verified: 'Verified',
+    'Pending': 'Pending',
+    'In Progress': 'In Progress',
+    'Resolved': 'Resolved',
   };
 
   return (
@@ -236,9 +273,9 @@ export default function PriorityInbox() {
               </div>
 
               {/* Status */}
-              <div className="flex-shrink-0 hidden md:block">
-                <span className={`px-3 py-1 text-xs font-medium rounded-full ${statusColors[issue.status]}`}>
-                  {statusLabels[issue.status]}
+              <div className="flex-shrink-0 hidden md:block w-24 text-right">
+                <span className={`px-3 py-1 text-[10px] font-medium rounded-full ${statusColors[issue.status] || 'bg-gray-500/20 text-gray-400'}`}>
+                  {issue.status}
                 </span>
               </div>
 
@@ -250,7 +287,7 @@ export default function PriorityInbox() {
 
       {/* Modal */}
       {selectedIssue && (
-        <IssueModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} />
+        <IssueModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} onRefresh={fetchIssues} />
       )}
     </>
   );

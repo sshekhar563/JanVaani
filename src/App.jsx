@@ -52,7 +52,7 @@ function AnimatedRoutes() {
           <Route path="/"             element={<LandingPage />} />
           <Route path="/report"       element={<CitizenPortal />} />
           <Route path="/dashboard"    element={
-            <ProtectedRoute allowedRoles={['admin', 'department']}>
+            <ProtectedRoute allowedRoles={['admin', 'department', 'public']}>
               <Dashboard />
             </ProtectedRoute>
           } />

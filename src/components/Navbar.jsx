@@ -28,11 +28,14 @@ export default function Navbar() {
   // Close mobile menu on route change
   useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
-  const navLinks = [
+  const publicNavLinks = [
     { to: '/',       hiLabel: 'घर',              enLabel: 'Home' },
     { to: '/report', hiLabel: 'शिकायत दर्ज करें', enLabel: 'File Complaint' },
-    { to: '/dashboard', hiLabel: 'डैशबोर्ड',     enLabel: 'Dashboard' },
   ];
+
+  const navLinks = isAuthenticated 
+    ? [...publicNavLinks, { to: '/dashboard', hiLabel: 'डैशबोर्ड', enLabel: 'Dashboard' }]
+    : publicNavLinks;
 
   return (
     <nav

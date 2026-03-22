@@ -2,7 +2,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status, Depends
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -63,9 +64,9 @@ async def startup_db():
         users_collection = db.users
         complaints_collection = db.complaints
         pothole_reports_collection = db.pothole_reports
-        print("âœ… Connected to MongoDB")
+        print("[MongoDB] Connected successfully")
     except Exception as e:
-        print(f"âš ï¸  MongoDB not available ({e}). Auth endpoints will return errors.")
+        print(f"[MongoDB] Not available ({e}). Auth endpoints will return errors.")
         client = None
         db = None
         users_collection = None
@@ -111,6 +112,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login", auto_error=False)
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+    except jwt.PyJWTError:
+        return None
+    
+    if users_collection is not None:
+        user = await users_collection.find_one({"email": email})
+        if user:
+            user["_id"] = str(user["_id"])
+            return user
+    return None
+
+async def require_current_user(current_user: dict = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    return current_user
 
 # -----------------------------------------------------------------------
 # Health Check
@@ -156,7 +181,7 @@ async def signup(user: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ SIGNUP ERROR: {e}")
+        print(f"[AUTH] SIGNUP ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
@@ -276,16 +301,20 @@ class ComplaintCreate(BaseModel):
     location: str
     category: str
     analysis: dict
+    author_email: Optional[str] = None
 
 
 @app.post("/api/complaints")
-async def create_complaint(complaint: ComplaintCreate):
+async def create_complaint(complaint: ComplaintCreate, current_user: dict = Depends(get_current_user)):
     if complaints_collection is None:
         raise HTTPException(status_code=503, detail="Database not available")
 
     complaint_dict = complaint.model_dump() if hasattr(complaint, "model_dump") else complaint.dict()
     complaint_dict["created_at"] = datetime.now(timezone.utc)
     complaint_dict["status"] = "Pending"
+    
+    if current_user:
+        complaint_dict["author_email"] = current_user.get("email")
     
     # Generate a sequential tracking ID simply using current count
     count = await complaints_collection.count_documents({})
@@ -298,15 +327,45 @@ async def create_complaint(complaint: ComplaintCreate):
 
 
 @app.get("/api/complaints")
-async def get_complaints():
+async def get_complaints(current_user: dict = Depends(require_current_user)):
     if complaints_collection is None:
         raise HTTPException(status_code=503, detail="Database not available")
 
-    complaints = await complaints_collection.find().sort("created_at", -1).to_list(100)
+    query = {}
+    if current_user.get("role") == "public":
+        query["author_email"] = current_user.get("email")
+    elif current_user.get("role") == "admin":
+        assigned_region = current_user.get("assigned_region")
+        if assigned_region:
+            query["location"] = assigned_region
+
+    complaints = await complaints_collection.find(query).sort("created_at", -1).to_list(100)
     for c in complaints:
         c["_id"] = str(c["_id"])
     return complaints
 
+class ComplaintStatusUpdate(BaseModel):
+    status: str
+
+from bson import ObjectId
+
+@app.patch("/api/complaints/{complaint_id}/status")
+async def update_complaint_status(complaint_id: str, status_update: ComplaintStatusUpdate, current_user: dict = Depends(require_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only administrators can update status")
+    if complaints_collection is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        updated = await complaints_collection.update_one(
+            {"_id": ObjectId(complaint_id)},
+            {"$set": {"status": status_update.status, "updated_at": datetime.now(timezone.utc)}}
+        )
+        if updated.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Complaint not found")
+        return {"message": "Status updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid complaint ID format")
 
 # -----------------------------------------------------------------------
 # Pothole Detection Endpoints
@@ -345,10 +404,11 @@ class PotholeReportCreate(BaseModel):
     image_url: str = ""
     original_filename: str = ""
     detection_result: dict = {}
+    author_email: str = ""
 
 
 @app.post("/api/pothole-reports")
-async def create_pothole_report(report: PotholeReportCreate):
+async def create_pothole_report(report: PotholeReportCreate, current_user: dict = Depends(get_current_user)):
     """Store a pothole detection report in the database."""
     if pothole_reports_collection is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -356,6 +416,9 @@ async def create_pothole_report(report: PotholeReportCreate):
     report_dict = report.model_dump() if hasattr(report, "model_dump") else report.dict()
     report_dict["created_at"] = datetime.now(timezone.utc)
     report_dict["status"] = "Pending"
+    
+    if current_user:
+        report_dict["author_email"] = current_user.get("email")
 
     # Extract priority from detection result
     detection = report_dict.get("detection_result", {})
@@ -375,12 +438,20 @@ async def create_pothole_report(report: PotholeReportCreate):
 
 
 @app.get("/api/pothole-reports")
-async def get_pothole_reports():
+async def get_pothole_reports(current_user: dict = Depends(require_current_user)):
     """Get all pothole detection reports."""
     if pothole_reports_collection is None:
         raise HTTPException(status_code=503, detail="Database not available")
 
-    reports = await pothole_reports_collection.find().sort("created_at", -1).to_list(100)
+    query = {}
+    if current_user.get("role") == "public":
+        query["author_email"] = current_user.get("email")
+    elif current_user.get("role") == "admin":
+        assigned_region = current_user.get("assigned_region")
+        if assigned_region:
+            query["location"] = assigned_region
+
+    reports = await pothole_reports_collection.find(query).sort("created_at", -1).to_list(100)
     for r in reports:
         r["_id"] = str(r["_id"])
     return reports

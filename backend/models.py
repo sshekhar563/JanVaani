@@ -12,6 +12,7 @@ class UserCreate(UserBase):
     password: str
     role: Literal["public", "admin"] = "public"
     registration_key: Optional[str] = None  # For admin
+    assigned_region: Optional[str] = None  # For admin
 
 class UserLogin(BaseModel):
     email: str
@@ -20,6 +21,7 @@ class UserLogin(BaseModel):
 class UserInDB(UserBase):
     hashed_password: str
     role: Literal["public", "admin"] = "public"
+    assigned_region: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
@@ -40,6 +42,7 @@ class ComplaintRequest(BaseModel):
     text: Optional[str] = Field(None, description="Citizen complaint text")
     location: Optional[str] = None
     category: Optional[str] = None
+    author_email: Optional[str] = None
 
     input_mode: Literal["text", "voice", "image"] = "text"
 
