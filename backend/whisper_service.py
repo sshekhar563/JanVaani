@@ -1,6 +1,9 @@
 
+import logging
 import os
 from pathlib import Path
+
+
 from typing import Dict, Optional
 
 import requests
@@ -8,6 +11,8 @@ from dotenv import load_dotenv
 
 from language_codes import LANGUAGE_CODE_MAP
 from transformers_asr import transcribe_with_transformers
+
+logger = logging.getLogger("whisper_service")
 
 try:
     import whisper
@@ -120,15 +125,28 @@ def _transcribe_with_transformers_fallback(file_path: str, language_hint: Option
 
 
 def transcribe_audio(file_path: str, language_hint: Optional[str] = None) -> Dict[str, str]:
+    transcription_errors = []
+
     if OPENAI_API_KEY:
-        return _transcribe_with_openai(file_path, language_hint)
+        try:
+            return _transcribe_with_openai(file_path, language_hint)
+        except requests.RequestException as exc:
+            transcription_errors.append(f"OpenAI request failed: {exc}")
+            logger.warning("OpenAI transcription failed (%s), falling back locally.", exc)
+        except Exception as exc:  # pragma: no cover
+            transcription_errors.append(f"OpenAI transcription error: {exc}")
+            logger.warning("OpenAI transcription error (%s), falling back locally.", exc)
 
     try:
         return _transcribe_locally(file_path, language_hint)
-    except Exception as exc:
-        try:
-            return _transcribe_with_transformers_fallback(file_path, language_hint)
-        except Exception as fallback_exc:
-            raise RuntimeError(
-                f"Local transcription failed: {exc}; transformers fallback failed: {fallback_exc}"
-            )
+    except Exception as exc:  # pragma: no cover
+        transcription_errors.append(f"Local Whisper failed: {exc}")
+        logger.info("Local Whisper fallback failed: %s", exc)
+
+    try:
+        return _transcribe_with_transformers_fallback(file_path, language_hint)
+    except Exception as fallback_exc:
+        transcription_errors.append(f"Transformers fallback failed: {fallback_exc}")
+        logger.info("Transformers fallback failed: %s", fallback_exc)
+
+    raise RuntimeError(" | ".join(transcription_errors))

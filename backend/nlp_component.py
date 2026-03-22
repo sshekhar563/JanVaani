@@ -88,7 +88,7 @@ def urgency_score(sentiment):
     return 0.30
 
 
-def analyze_complaint(text):
+def analyze_complaint(text, language_hint=None):
     """Full NLP analysis of a citizen complaint. Returns a result dict."""
     sentiment = _get_sentiment(text)
     category = categorize_issue(text)

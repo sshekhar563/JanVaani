@@ -68,7 +68,7 @@ def transcribe_with_transformers(file_path: str, language_hint: Optional[str] = 
     kwargs = {}
     if language_code:
         kwargs["language"] = language_code
-    result = asr_pipeline(Path(file_path), **kwargs)
+    result = asr_pipeline(str(file_path), **kwargs)
     text = (result.get("text") or "").strip()
     return {
         "text": text,
