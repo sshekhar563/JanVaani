@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Github, Twitter, Mail, Heart } from 'lucide-react';
 import Logo from './Logo';
+import { motion } from 'framer-motion';
 
+/**
+ * Footer — Clean footer with links, social media, and branding.
+ * Original Oil Painting palette: teal-deep background, cream text.
+ */
 export default function Footer() {
   const platformLinks = [
     { hiLabel: 'समस्या दर्ज करें', enLabel: 'Report an Issue', to: '/report' },
@@ -17,9 +22,14 @@ export default function Footer() {
     { hiLabel: 'सहायता से संपर्क', enLabel: 'Contact Support', to: '#' },
   ];
 
+  const socials = [
+    { Icon: Twitter, label: 'Twitter', id: 'footer-twitter' },
+    { Icon: Github, label: 'GitHub', id: 'footer-github' },
+    { Icon: Mail, label: 'Email', id: 'footer-email' },
+  ];
+
   return (
     <footer style={{ background: '#0D4A5C', position: 'relative', overflow: 'hidden' }}>
-
       {/* Top accent line */}
       <div style={{
         height: '3px',
@@ -90,16 +100,13 @@ export default function Footer() {
 
             {/* Social links */}
             <div className="flex gap-3">
-              {[
-                { Icon: Twitter, label: 'Twitter', id: 'footer-twitter' },
-                { Icon: Github,  label: 'GitHub',  id: 'footer-github' },
-                { Icon: Mail,    label: 'Email',   id: 'footer-email' },
-              ].map(({ Icon, label, id }) => (
-                <a
+              {socials.map(({ Icon, label, id }) => (
+                <motion.a
                   key={id}
                   href="#"
                   id={id}
                   title={label}
+                  whileHover={{ scale: 1.1, y: -2 }}
                   className="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200"
                   style={{
                     background: 'rgba(253,236,200,0.08)',
@@ -118,7 +125,7 @@ export default function Footer() {
                   }}
                 >
                   <Icon className="w-4 h-4" />
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>

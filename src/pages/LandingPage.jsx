@@ -1,30 +1,24 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import {
   ArrowRight, Zap, Shield, Eye, BarChart3, Brain, CheckCircle2,
-  AlertTriangle, Clock, Users, TrendingUp, MapPin, Mic, Camera,
-  ChevronRight, Star, ArrowUpRight, Volume2
+  AlertTriangle, Clock, Users, TrendingUp, Mic, Camera,
+  Star, ArrowUpRight, Volume2, ChevronDown, Sparkles
 } from 'lucide-react';
 import Footer from '../components/Footer';
-import gsap from 'gsap';
 
-/* ── Animated Counter ── */
+/* ═══════════════════════════════════════════
+   Helper Components
+   ═══════════════════════════════════════════ */
+
 function AnimatedCounter({ target, suffix = '', prefix = '' }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible) return;
+    if (!isInView) return;
     const duration = 2000;
     const steps = 60;
     const increment = target / steps;
@@ -35,697 +29,468 @@ function AnimatedCounter({ target, suffix = '', prefix = '' }) {
       else setCount(Math.floor(current));
     }, duration / steps);
     return () => clearInterval(timer);
-  }, [isVisible, target]);
+  }, [isInView, target]);
 
   return <span ref={ref}>{prefix}{count}{suffix}</span>;
 }
 
-/* ── Abstract Brushstroke SVG Background ── */
-function BrushstrokeBackground() {
+function SectionHeader({ badge, badgeIcon: BadgeIcon, hiTitle, enTitle, hiSub, enSub, light = false }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
+
   return (
-    <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <linearGradient id="brush1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#C4440A" stopOpacity="0.12"/>
-          <stop offset="100%" stopColor="#E8820A" stopOpacity="0.06"/>
-        </linearGradient>
-        <linearGradient id="brush2" x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#1A7A8A" stopOpacity="0.1"/>
-          <stop offset="100%" stopColor="#2A9BAD" stopOpacity="0.05"/>
-        </linearGradient>
-        <linearGradient id="brush3" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#F5B830" stopOpacity="0.08"/>
-          <stop offset="100%" stopColor="#E8820A" stopOpacity="0.04"/>
-        </linearGradient>
-      </defs>
-      {/* Orange brushstroke — top right */}
-      <path d="M600 0 Q700 50 800 30 Q900 10 1000 80 Q1100 150 1200 120 Q1300 90 1440 140 L1440 0 Z" fill="url(#brush1)"/>
-      {/* Teal brushstroke — left side */}
-      <path d="M0 200 Q100 160 200 220 Q300 280 180 350 Q60 420 0 380 Z" fill="url(#brush2)"/>
-      {/* Amber brushstroke — bottom */}
-      <path d="M400 500 Q500 460 700 490 Q900 520 1000 480 Q1100 440 1200 500 Q1300 560 1440 520 L1440 600 L0 600 L0 540 Q100 580 200 550 Q300 520 400 500 Z" fill="url(#brush3)"/>
-      {/* Small orange accent strokes */}
-      <ellipse cx="300" cy="100" rx="120" ry="15" fill="#C4440A" opacity="0.06" transform="rotate(-15 300 100)"/>
-      <ellipse cx="900" cy="400" rx="100" ry="12" fill="#1A7A8A" opacity="0.05" transform="rotate(10 900 400)"/>
-      <ellipse cx="1100" cy="250" rx="80" ry="10" fill="#E8820A" opacity="0.05" transform="rotate(-8 1100 250)"/>
-    </svg>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="text-center mb-16"
+    >
+      {badge && (
+        <div
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm text-xs font-semibold mb-5"
+          style={{
+            background: light ? 'rgba(245,184,48,0.1)' : 'rgba(232,130,10,0.1)',
+            border: `1px solid ${light ? 'rgba(245,184,48,0.3)' : 'rgba(232,130,10,0.3)'}`,
+            color: light ? '#F5B830' : '#E8820A',
+            fontFamily: 'Hind Siliguri, sans-serif',
+          }}
+        >
+          {BadgeIcon && <BadgeIcon className="w-3.5 h-3.5" />}
+          <span className="hi-text">{badge.hi}</span>
+          <span className="en-text">{badge.en}</span>
+        </div>
+      )}
+      <h2
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
+          fontWeight: 700,
+          color: light ? '#FDECC8' : '#C4440A',
+          marginBottom: '1rem',
+        }}
+      >
+        <span className="hi-text">{hiTitle}</span>
+        <span className="en-text">{enTitle}</span>
+      </h2>
+      {(hiSub || enSub) && (
+        <p style={{
+          fontFamily: 'Hind Siliguri, sans-serif',
+          fontSize: '1rem',
+          color: light ? 'rgba(253,236,200,0.7)' : '#3D2A18',
+          lineHeight: 1.7,
+          maxWidth: '36rem',
+          margin: '0 auto',
+        }}>
+          <span className="hi-text">{hiSub}</span>
+          <span className="en-text">{enSub}</span>
+        </p>
+      )}
+    </motion.div>
   );
 }
 
-/* ── Jaali Separator ── */
-function JaaliSeparator() {
-  return (
-    <div className="relative overflow-hidden py-2" aria-hidden="true">
-      <svg width="100%" height="32" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <pattern id="jaali" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-            <rect x="8" y="8" width="16" height="16" fill="none" stroke="#E8820A" strokeWidth="0.8" opacity="0.3" transform="rotate(45 16 16)"/>
-            <circle cx="16" cy="0" r="2" fill="none" stroke="#C4440A" strokeWidth="0.6" opacity="0.2"/>
-            <circle cx="16" cy="32" r="2" fill="none" stroke="#C4440A" strokeWidth="0.6" opacity="0.2"/>
-            <circle cx="0" cy="16" r="2" fill="none" stroke="#C4440A" strokeWidth="0.6" opacity="0.2"/>
-            <circle cx="32" cy="16" r="2" fill="none" stroke="#C4440A" strokeWidth="0.6" opacity="0.2"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="32" fill="url(#jaali)"/>
-      </svg>
-      <div style={{
-        position: 'absolute', inset: '50% 0 0 0', height: '1px',
-        background: 'linear-gradient(90deg, transparent, rgba(232,130,10,0.5) 20%, rgba(196,68,10,0.4) 50%, rgba(232,130,10,0.5) 80%, transparent)',
-      }}/>
-    </div>
-  );
-}
+function AnimatedCard({ children, delay = 0, className = '', style = {} }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
 
-/* ── Section Badge ── */
-function SectionBadge({ icon: Icon, hiText, enText }) {
   return (
-    <div
-      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-5"
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+      whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(196,68,10,0.18)' }}
+      className={`rounded-lg transition-all duration-300 ${className}`}
       style={{
-        background: 'rgba(232,130,10,0.1)',
-        border: '1px solid rgba(232,130,10,0.3)',
-        color: '#E8820A',
-        fontFamily: 'Hind Siliguri, sans-serif',
+        background: '#FDECC8',
+        border: '1.5px solid rgba(232,130,10,0.25)',
+        ...style,
       }}
     >
-      {Icon && <Icon className="w-3 h-3" />}
-      <span className="hi-text">{hiText}</span>
-      <span className="en-text">{enText}</span>
-    </div>
-  );
-}
-
-/* ── GSAP Button Component ── */
-function GsapButton({ children, className, style, ...props }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const onEnter = () => gsap.to(el, { scale: 1.05, duration: 0.25, ease: 'power2.out' });
-    const onLeave = () => gsap.to(el, { scale: 1, duration: 0.25, ease: 'power2.out' });
-    const onClick = () => {
-      gsap.fromTo(el, { scale: 0.95 }, { scale: 1.05, duration: 0.15, ease: 'power2.out', yoyo: true, repeat: 1 });
-    };
-    el.addEventListener('mouseenter', onEnter);
-    el.addEventListener('mouseleave', onLeave);
-    el.addEventListener('click', onClick);
-    return () => {
-      el.removeEventListener('mouseenter', onEnter);
-      el.removeEventListener('mouseleave', onLeave);
-      el.removeEventListener('click', onClick);
-    };
-  }, []);
-
-  return (
-    <Link ref={ref} className={`btn-gsap ${className || ''}`} style={{ willChange: 'transform', ...style }} {...props}>
       {children}
-    </Link>
+    </motion.div>
   );
 }
 
-/* ── Main Component ── */
-export default function LandingPage() {
-  const heroRef = useRef(null);
-  const featuresRef = useRef(null);
 
-  // GSAP hero entrance
+/* ═══════════════════════════════════════════
+   LANDING PAGE
+   ═══════════════════════════════════════════ */
+export default function LandingPage() {
+  const [showFloatingCta, setShowFloatingCta] = useState(false);
+
   useEffect(() => {
-    if (heroRef.current) {
-      const ctx = gsap.context(() => {
-        gsap.from('.hero-title', { y: 60, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 });
-        gsap.from('.hero-subtitle', { y: 40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: 0.4 });
-        gsap.from('.hero-tagline', { y: 30, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.6 });
-        gsap.from('.hero-cta', { y: 20, opacity: 0, duration: 0.5, ease: 'power3.out', delay: 0.8 });
-        gsap.from('.hero-stats', { y: 20, opacity: 0, duration: 0.5, ease: 'power3.out', delay: 1.0 });
-      }, heroRef);
-      return () => ctx.revert();
-    }
+    const handleScroll = () => setShowFloatingCta(window.scrollY > 600);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const stats = [
+    { value: 85, suffix: '%',  hiLabel: 'तेज़ समाधान', enLabel: 'Faster Resolution', icon: Zap,   color: '#E8820A' },
+    { value: 3,  suffix: '.2x', hiLabel: 'नागरिक जुड़ाव', enLabel: 'Citizen Engagement', icon: Users, color: '#F5B830' },
+    { value: 24, suffix: '/7', hiLabel: 'AI निगरानी', enLabel: 'AI Monitoring',       icon: Eye,   color: '#1A7A8A' },
+  ];
 
   const features = [
     {
-      hiTitle: 'बहुभाषी इनपुट',
-      enTitle: 'Multilingual Intake',
-      hiDesc: 'नागरिक आवाज़, पाठ और छवि से शिकायत दर्ज करें',
-      enDesc: 'Submit via voice, text, or image in your language',
-      step: '०१',
-      accentColor: 'var(--color-primary)',
+      hiTitle: 'बहुभाषी इनपुट', enTitle: 'Multilingual Intake',
+      hiDesc: 'आवाज़, पाठ या छवि से शिकायत दर्ज करें', enDesc: 'Submit via voice, text, or image in your language',
+      icon: Mic, step: '01', color: '#C4440A',
     },
     {
-      hiTitle: 'AI प्राथमिकता',
-      enTitle: 'AI Prioritization',
-      hiDesc: 'तात्कालिकता और प्रभाव के आधार पर स्वचालित वर्गीकरण',
-      enDesc: 'Automated urgency and impact scoring',
-      step: '०२',
-      accentColor: 'var(--color-amber)',
+      hiTitle: 'AI प्राथमिकता', enTitle: 'AI Prioritization',
+      hiDesc: 'स्वचालित तात्कालिकता और प्रभाव स्कोरिंग', enDesc: 'Automated urgency and impact scoring',
+      icon: Brain, step: '02', color: '#E8820A',
     },
     {
-      hiTitle: 'पारदर्शी समाधान',
-      enTitle: 'Transparent Resolution',
-      hiDesc: 'कार्य-प्रमाण सत्यापन से जनता का विश्वास बढ़ाएं',
-      enDesc: 'Visual proof-of-work builds public trust',
-      step: '०३',
-      accentColor: 'var(--color-teal)',
+      hiTitle: 'पारदर्शी समाधान', enTitle: 'Transparent Resolution',
+      hiDesc: 'कार्य-प्रमाण सत्यापन से विश्वास बढ़ाएं', enDesc: 'Visual proof-of-work builds public trust',
+      icon: Shield, step: '03', color: '#1A7A8A',
     },
-  ];
-
-  const stats = [
-    { value: 85,  suffix: '%',  hiLabel: 'तेज़ समाधान', enLabel: 'Faster Resolution',  icon: Zap,   color: 'var(--color-primary)' },
-    { value: 3,   suffix: '.2x', hiLabel: 'नागरिक जुड़ाव', enLabel: 'Citizen Engagement', icon: Users, color: 'var(--color-amber)' },
-    { value: 24,  suffix: '/7', hiLabel: 'AI निगरानी', enLabel: 'AI Monitoring',       icon: Eye,   color: 'var(--color-teal)' },
   ];
 
   const beforeItems = [
-    { icon: Clock,         hiText: 'समस्या समाधान में हफ्तों की देरी', enText: 'Weeks-long delays in issue resolution' },
-    { icon: AlertTriangle, hiText: 'कोई प्राथमिकता नहीं', enText: 'No prioritization — first come, first served' },
-    { icon: Eye,           hiText: 'कार्रवाई पर शून्य पारदर्शिता', enText: 'Zero transparency on action status' },
-    { icon: Users,         hiText: 'नागरिकों में निराशा', enText: 'Citizen frustration and distrust' },
+    { icon: Clock,         hiText: 'समस्या समाधान में हफ्तों की देरी', enText: 'Weeks-long delays in resolution' },
+    { icon: AlertTriangle, hiText: 'कोई प्राथमिकता प्रणाली नहीं', enText: 'No prioritization system' },
+    { icon: Eye,           hiText: 'कार्रवाई पर शून्य पारदर्शिता', enText: 'Zero transparency on actions' },
+    { icon: Users,         hiText: 'नागरिकों में निराशा और अविश्वास', enText: 'Citizen frustration and distrust' },
     { icon: BarChart3,     hiText: 'गलत सूचना अनियंत्रित', enText: 'Misinformation goes unchecked' },
   ];
 
   const afterItems = [
-    { icon: Zap,          hiText: 'AI-संचालित समाधान घंटों में', enText: 'AI-driven priority resolution in hours' },
-    { icon: Brain,        hiText: 'स्मार्ट स्कोरिंग', enText: 'Smart scoring based on urgency & impact' },
-    { icon: Shield,       hiText: 'रीयल-टाइम सत्यापित प्रमाण', enText: 'Real-time verified proof of completion' },
-    { icon: Star,         hiText: 'पब्लिक ट्रस्ट इंडेक्स', enText: 'Public Trust Index builds confidence' },
-    { icon: CheckCircle2, hiText: 'AI गलत सूचना चिह्नित करता है', enText: 'AI flags misinformation instantly' },
+    { icon: Zap,          hiText: 'AI-संचालित समाधान घंटों में', enText: 'AI-driven resolution in hours' },
+    { icon: Brain,        hiText: 'स्मार्ट प्राथमिकता स्कोरिंग', enText: 'Smart priority scoring system' },
+    { icon: Shield,       hiText: 'रीयल-टाइम सत्यापित प्रमाण', enText: 'Real-time verified proof' },
+    { icon: Star,         hiText: 'पब्लिक ट्रस्ट इंडेक्स', enText: 'Public Trust Index' },
+    { icon: CheckCircle2, hiText: 'AI गलत सूचना चिह्नित करता है', enText: 'AI flags misinformation' },
   ];
 
   const aiFeatures = [
-    { hiTitle: 'ML प्राथमिकता', enTitle: 'ML Prioritization', hiDesc: 'प्रशिक्षित मॉडल से तात्कालिकता और प्रभाव के आधार पर स्वत: रैंकिंग', enDesc: 'Grievances auto-ranked by urgency & impact using trained models', icon: Brain },
-    { hiTitle: 'बहुभाषी सेवन', enTitle: 'Multilingual Intake', hiDesc: 'हिंदी, अंग्रेजी, तमिल, बंगाली, मराठी — सभी समर्थित', enDesc: 'Hindi, English, Tamil, Bengali, Marathi — all supported natively', icon: Volume2 },
-    { hiTitle: 'दृश्य कार्य-प्रमाण', enTitle: 'Visual Proof-of-Work', hiDesc: 'फोटो/वीडियो साक्ष्य जियो-टैग और सत्यापित', enDesc: 'Photo/video evidence geotagged and verified before processing', icon: Camera },
+    { hiTitle: 'ML प्राथमिकता', enTitle: 'ML Prioritization', hiDesc: 'प्रशिक्षित मॉडल से स्वत: रैंकिंग', enDesc: 'Auto-ranked by urgency using trained models', icon: Brain },
+    { hiTitle: 'बहुभाषी सेवन', enTitle: 'Multilingual Intake', hiDesc: 'हिंदी, अंग्रेजी, तमिल, बंगाली समर्थित', enDesc: 'Hindi, English, Tamil, Bengali supported', icon: Volume2 },
+    { hiTitle: 'दृश्य कार्य-प्रमाण', enTitle: 'Visual Proof-of-Work', hiDesc: 'फोटो/वीडियो जियो-टैग और सत्यापित', enDesc: 'Photo/video geotagged and verified', icon: Camera },
+  ];
+
+  const pipelineSteps = [
+    { hi: 'आवाज़/टेक्स्ट', en: 'Voice/Text' },
+    { hi: 'AI प्रोसेसिंग', en: 'AI Processing' },
+    { hi: 'प्राथमिकता', en: 'Priority Score' },
+    { hi: 'विभाग रूटिंग', en: 'Dept Routing' },
+    { hi: 'समाधान', en: 'Resolution' },
   ];
 
   return (
-    <div
-      className="min-h-screen overflow-hidden"
-      style={{ background: 'var(--color-bg)', color: 'var(--color-ink)' }}
-    >
+    <div className="min-h-screen" style={{ background: '#FDECC8', color: '#1A1208' }}>
 
-      {/* ════════════════════════════════
-          HERO SECTION
-          ════════════════════════════════ */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center pt-16" id="hero" style={{ background: '#1A1208' }}>
-
-        {/* Abstract brushstroke SVG background */}
+      {/* ═══════════ HERO SECTION ═══════════ */}
+      <section className="relative min-h-screen flex items-center pt-16" style={{ background: '#1A1208', overflow: 'hidden' }}>
+        {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <BrushstrokeBackground />
-          {/* Warm ambient glow */}
-          <div style={{
-            position: 'absolute', top: '20%', left: '15%',
-            width: 500, height: 500,
-            background: 'radial-gradient(circle, rgba(196,68,10,0.12) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }}/>
-          <div style={{
-            position: 'absolute', bottom: '10%', right: '10%',
-            width: 400, height: 400,
-            background: 'radial-gradient(circle, rgba(26,122,138,0.1) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }}/>
+          <div style={{ position: 'absolute', top: '10%', left: '5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,68,10,0.12) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,122,138,0.1) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,184,48,0.06) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(253,236,200,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         </div>
 
-        {/* Hero content */}
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full text-center" style={{ zIndex: 10 }}>
 
           {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-8"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-xs font-semibold mb-8"
             style={{
-              background: 'rgba(196,68,10,0.15)',
-              border: '1px solid rgba(196,68,10,0.4)',
+              background: 'rgba(232,130,10,0.15)',
+              border: '1px solid rgba(232,130,10,0.3)',
               color: '#F5B830',
               fontFamily: 'Hind Siliguri, sans-serif',
             }}
           >
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#1A7A8A' }} />
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
             <span className="hi-text">AI-संचालित शासन मंच</span>
             <span className="en-text">AI-Powered Governance Platform</span>
             <ArrowUpRight className="w-3 h-3" />
-          </div>
+          </motion.div>
 
           {/* Main headline */}
-          <h1 className="hero-title" style={{
-            fontFamily: "'Noto Serif Devanagari', 'Playfair Display', serif",
-            fontSize: 'clamp(3.5rem, 8vw, 7rem)',
-            fontWeight: 800,
-            lineHeight: 1.05,
-            color: '#FDECC8',
-            marginBottom: '0.6rem',
-            textShadow: '0 2px 20px rgba(196,68,10,0.3)',
-          }}>
-            <span className="hi-text">जनवाणी</span>
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8, ease: 'easeOut' }}
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 5.5rem)',
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: '#FDECC8',
+              marginBottom: '1rem',
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '-0.02em',
+            }}
+          >
+            <span className="hi-text">
+              <span style={{ fontFamily: "'Noto Serif Devanagari', serif" }}>जनवाणी</span>
+            </span>
             <span className="en-text">JanVaani</span>
-          </h1>
+          </motion.h1>
 
-          <h2 className="hero-subtitle" style={{
-            fontFamily: "'Noto Serif Devanagari', serif",
-            fontSize: 'clamp(1.1rem, 2.5vw, 1.7rem)',
-            fontWeight: 600,
-            color: '#F5B830',
-            marginBottom: '0.8rem',
-            letterSpacing: '0.03em',
-          }}>
-            <span className="hi-text">AI-संचालित नागरिक शिकायत प्रणाली</span>
-            <span className="en-text">AI-Powered Civic Grievance System</span>
-          </h2>
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-lg sm:text-xl font-medium mb-3"
+            style={{ color: '#F5B830', fontFamily: "'Noto Serif Devanagari', serif" }}
+          >
+            <span className="hi-text">अव्यवस्था से स्पष्टता तक</span>
+            <span className="en-text" style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic' }}>From Chaos to Clarity</span>
+          </motion.p>
 
-          <p className="hero-tagline" style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 'clamp(1rem, 2vw, 1.35rem)',
-            fontStyle: 'italic',
-            color: 'rgba(253,236,200,0.7)',
-            marginBottom: '1.25rem',
-          }}>
-            <span className="hi-text">जनता की आवाज़, नेता की दिशा</span>
-            <span className="en-text">Transforming citizen voices into actionable intelligence</span>
-          </p>
-
-          <p className="hero-tagline subheading max-w-2xl mx-auto" style={{ marginBottom: '2.5rem', fontSize: '1.05rem', color: 'rgba(253,236,200,0.6)' }}>
-            <span className="hi-text">बिखरी हुई नागरिक शिकायतों को संरचित, कार्रवाई योग्य जानकारी में बदलें।</span>
-            <span className="en-text">Transform scattered citizen grievances into structured, actionable intelligence.</span>
-          </p>
+          <motion.p
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-base sm:text-lg max-w-2xl mx-auto mb-10"
+            style={{ color: 'rgba(253,236,200,0.6)', lineHeight: 1.7, fontFamily: 'Hind Siliguri, sans-serif' }}
+          >
+            <span className="hi-text">बिखरी हुई नागरिक शिकायतों को AI द्वारा संरचित, कार्रवाई योग्य जानकारी में बदलें।</span>
+            <span className="en-text">Transform scattered citizen grievances into structured, actionable intelligence powered by AI.</span>
+          </motion.p>
 
           {/* CTAs */}
-          <div className="hero-cta flex flex-col sm:flex-row gap-4 justify-center" style={{ marginBottom: '3.5rem' }}>
-            <GsapButton
-              to="/report"
-              id="hero-report-btn"
-              className="btn-primary flex items-center gap-2 justify-center"
-              style={{ fontSize: '1rem', padding: '1rem 2.5rem' }}
-            >
-              <Mic className="w-5 h-5" />
-              <span className="hi-text">शिकायत दर्ज करें</span>
-              <span className="en-text">File a Complaint</span>
-              <ArrowRight className="w-5 h-5" />
-            </GsapButton>
-            <GsapButton
-              to="/admin/login"
-              id="hero-admin-btn"
-              className="btn-admin flex items-center gap-2 justify-center"
-              style={{ fontSize: '1rem', padding: '1rem 2.5rem', borderRadius: '6px' }}
-            >
-              <Shield className="w-5 h-5" />
-              <span className="hi-text">प्रशासन लॉगिन</span>
-              <span className="en-text">Administration Login</span>
-            </GsapButton>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-14"
+          >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                to="/report"
+                id="hero-report-btn"
+                className="btn-primary flex items-center gap-2 justify-center text-base px-8 py-4"
+              >
+                <Mic className="w-5 h-5" />
+                <span className="hi-text">शिकायत दर्ज करें</span>
+                <span className="en-text">File a Complaint</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                to="/admin/login"
+                id="hero-admin-btn"
+                className="btn-admin flex items-center gap-2 justify-center text-base px-8 py-4"
+              >
+                <Shield className="w-5 h-5" />
+                <span className="hi-text">प्रशासन लॉगिन</span>
+                <span className="en-text">Admin Login</span>
+              </Link>
+            </motion.div>
+          </motion.div>
 
           {/* Stat pills */}
-          <div className="hero-stats flex flex-wrap items-center justify-center gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex flex-wrap items-center justify-center gap-4"
+          >
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 px-5 py-3 rounded-full"
+                className="flex items-center gap-3 px-5 py-3 rounded-lg"
                 style={{
-                  background: 'rgba(253,236,200,0.08)',
-                  border: `1.5px solid ${stat.color}40`,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                  background: 'rgba(253,236,200,0.05)',
+                  border: '1px solid rgba(253,236,200,0.12)',
                   backdropFilter: 'blur(8px)',
                 }}
               >
                 <div style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: `${stat.color}15`,
-                  border: `1.5px solid ${stat.color}`,
+                  width: 36, height: 36, borderRadius: 6,
+                  background: `${stat.color}20`,
+                  border: `1.5px solid ${stat.color}50`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: stat.color,
                 }}>
-                  <stat.icon style={{ width: 16, height: 16 }} />
+                  <stat.icon style={{ width: 18, height: 18 }} />
                 </div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: '1.3rem', fontWeight: 700,
-                    color: stat.color, lineHeight: 1,
-                  }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: stat.color, lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>
                     <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div style={{
-                    fontSize: '0.7rem', color: 'rgba(253,236,200,0.6)',
-                    fontFamily: 'Hind Siliguri, sans-serif',
-                  }}>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(253,236,200,0.5)', fontWeight: 500, fontFamily: 'Hind Siliguri, sans-serif' }}>
                     <span className="hi-text">{stat.hiLabel}</span>
                     <span className="en-text">{stat.enLabel}</span>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce" aria-hidden="true" style={{ zIndex: 10 }}>
-          <div style={{
-            width: 24, height: 40, borderRadius: 12,
-            border: '2px solid rgba(253,236,200,0.25)',
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-            padding: 6,
-          }}>
-            <div style={{
-              width: 4, height: 10, borderRadius: 2,
-              background: 'rgba(245,184,48,0.5)',
-              animation: 'slideUp 1.5s ease-in-out infinite',
-            }}/>
-          </div>
-        </div>
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+          style={{ zIndex: 10 }}
+        >
+          <ChevronDown className="w-6 h-6" style={{ color: 'rgba(253,236,200,0.3)' }} />
+        </motion.div>
       </section>
 
-      {/* ── Jaali Divider ── */}
-      <JaaliSeparator />
-
-      {/* ════════════════════════════════
-          FEATURES SECTION
-          ════════════════════════════════ */}
-      <section
-        id="features"
-        ref={featuresRef}
-        className="relative py-24"
-        style={{ background: 'var(--color-bg)' }}
-      >
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <SectionBadge icon={Star} hiText="जनवाणी क्यों काम करता है" enText="Why JanVaani Works" />
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontWeight: 700,
-              color: 'var(--color-primary)',
-              marginBottom: '1rem',
-            }}>
-              <span className="hi-text">यह कैसे </span>
-              <span className="en-text">How It </span>
-              <span style={{ color: 'var(--color-amber)' }}>
-                <span className="hi-text">काम करता है</span>
-                <span className="en-text">Works</span>
-              </span>
-            </h2>
-            <p className="subheading max-w-xl mx-auto">
-              <span className="hi-text">AI द्वारा संचालित — शिकायत से समाधान तक एक निर्बाध पाइपलाइन</span>
-              <span className="en-text">A seamless pipeline from complaint to resolution, powered by AI</span>
-            </p>
-          </div>
+      {/* ═══════════ HOW IT WORKS ═══════════ */}
+      <section className="section-padding" style={{ background: '#FDECC8' }}>
+        <div className="container-main">
+          <SectionHeader
+            badge={{ hi: 'जनवाणी कैसे काम करता है', en: 'How JanVaani Works' }}
+            badgeIcon={Sparkles}
+            hiTitle="तीन सरल चरण"
+            enTitle="Three Simple Steps"
+            hiSub="AI द्वारा संचालित — शिकायत से समाधान तक"
+            enSub="A seamless pipeline from complaint to resolution, powered by AI"
+          />
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, i) => (
-              <div
-                key={i}
-                className="heritage-card p-6 animate-slide-up group cursor-default"
-                style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'both' }}
-              >
-                {/* Step badge */}
-                <div style={{
-                  fontFamily: "'Noto Serif Devanagari', serif",
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'rgba(232,130,10,0.5)',
-                  marginBottom: '12px',
-                  letterSpacing: '0.1em',
-                }}>
+              <AnimatedCard key={i} delay={i * 0.1} className="p-7">
+                <p className="text-xs font-bold tracking-widest mb-4" style={{ color: '#3D2A18', opacity: 0.5, fontFamily: 'Hind Siliguri, sans-serif' }}>
                   <span className="hi-text">चरण {feature.step}</span>
-                  <span className="en-text">Step {feature.step}</span>
+                  <span className="en-text">STEP {feature.step}</span>
+                </p>
+                <div
+                  className="w-14 h-14 rounded-lg flex items-center justify-center mb-5"
+                  style={{
+                    background: `${feature.color}15`,
+                    border: `1.5px solid ${feature.color}40`,
+                    color: feature.color,
+                  }}
+                >
+                  <feature.icon className="w-6 h-6" />
                 </div>
-
-                {/* Icon Circle */}
-                <div style={{
-                  width: 72, height: 72,
-                  borderRadius: '50%',
-                  background: `${feature.accentColor}12`,
-                  border: `1.5px solid ${feature.accentColor}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: '16px',
-                  transition: 'all 0.3s ease',
-                  color: feature.accentColor,
-                  fontSize: '1.6rem',
-                }}>
-                  {i === 0 ? <Mic className="w-7 h-7" /> : i === 1 ? <Brain className="w-7 h-7" /> : <Shield className="w-7 h-7" />}
-                </div>
-
-                <h3 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
-                  color: 'var(--color-primary)',
-                  marginBottom: '8px',
-                }}>
+                <h3 className="text-lg font-bold mb-2" style={{ color: '#1A1208', fontFamily: "'Playfair Display', serif" }}>
                   <span className="hi-text">{feature.hiTitle}</span>
                   <span className="en-text">{feature.enTitle}</span>
                 </h3>
-                <p style={{
-                  fontSize: '0.85rem',
-                  lineHeight: 1.65,
-                  color: 'var(--color-ink-soft)',
-                  fontFamily: 'Hind Siliguri, sans-serif',
-                }}>
+                <p className="text-sm leading-relaxed" style={{ color: '#3D2A18', fontFamily: 'Hind Siliguri, sans-serif' }}>
                   <span className="hi-text">{feature.hiDesc}</span>
                   <span className="en-text">{feature.enDesc}</span>
                 </p>
-
-                {/* Bottom accent */}
-                <div style={{
-                  height: 3,
-                  borderRadius: 2,
-                  marginTop: 16,
-                  background: `linear-gradient(90deg, ${feature.accentColor}, transparent)`,
-                  opacity: 0.5,
-                }}/>
-              </div>
+                <div className="mt-5 h-1 rounded-full" style={{ background: `linear-gradient(90deg, ${feature.color}, transparent)`, width: '40%' }} />
+              </AnimatedCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Rangoli Rule ── */}
-      <div className="max-w-7xl mx-auto px-8 py-4">
-        <div className="rangoli-rule">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z" fill="#E8820A" opacity="0.5"/>
-          </svg>
-        </div>
-      </div>
+      {/* ═══════════ AI INTELLIGENCE ═══════════ */}
+      <section className="section-padding" style={{ background: '#0D4A5C', overflow: 'hidden', position: 'relative' }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(253,236,200,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-      {/* ════════════════════════════════
-          AI INTELLIGENCE SECTION (Dark Band)
-          ════════════════════════════════ */}
-      <section
-        id="ai-intelligence"
-        className="relative py-24 overflow-hidden"
-        style={{ background: '#1A1208' }}
-      >
-        {/* Brushstroke background */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.15 }}>
-          <BrushstrokeBackground />
-        </div>
+        <div className="container-main relative" style={{ zIndex: 1 }}>
+          <SectionHeader
+            light
+            badge={{ hi: 'AI-संचालित बुद्धिमत्ता', en: 'AI-Powered Intelligence' }}
+            badgeIcon={Brain}
+            hiTitle="बुद्धिमान शासन प्रणाली"
+            enTitle="Intelligent Governance System"
+            hiSub="आवाज़ से समाधान तक — हमारी AI पाइपलाइन शिकायतों को बुद्धिमानी से संसाधित करती है"
+            enSub="From voice to resolution — our AI pipeline processes grievances intelligently"
+          />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-5"
-              style={{
-                background: 'rgba(253,236,200,0.1)',
-                border: '1px solid rgba(253,236,200,0.3)',
-                color: '#FDECC8',
-                fontFamily: 'Hind Siliguri, sans-serif',
-              }}
-            >
-              <Brain className="w-3 h-3" />
-              <span className="hi-text">AI-संचालित बुद्धिमत्ता</span>
-              <span className="en-text">AI-Powered Intelligence</span>
-            </div>
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontWeight: 700,
-              color: '#FDECC8',
-              marginBottom: '1rem',
-            }}>
-              <span className="hi-text">बुद्धिमान शासन प्रणाली</span>
-              <span className="en-text">Intelligent Governance System</span>
-            </h2>
-            <p style={{
-              color: 'rgba(253,236,200,0.7)',
-              maxWidth: '36rem',
-              margin: '0 auto',
-              fontFamily: 'Hind Siliguri, sans-serif',
-              lineHeight: 1.7,
-            }}>
-              <span className="hi-text">आवाज़ से समाधान तक — हमारी AI पाइपलाइन शिकायतों को बुद्धिमानी से संसाधित करती है</span>
-              <span className="en-text">From voice to resolution — our AI pipeline processes grievances intelligently</span>
-            </p>
-          </div>
-
-          {/* Flow cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
             {aiFeatures.map((feat, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="group animate-slide-up"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ delay: i * 0.15 }}
+                whileHover={{ y: -4, borderColor: 'rgba(232,130,10,0.5)' }}
+                className="p-7 rounded-lg transition-all duration-300 cursor-default"
                 style={{
-                  animationDelay: `${i * 150}ms`,
-                  animationFillMode: 'both',
-                  background: 'rgba(253,236,200,0.06)',
-                  border: '1.5px solid rgba(253,236,200,0.2)',
-                  borderRadius: 8,
-                  padding: '2rem',
-                  transition: 'all 0.3s ease',
-                  cursor: 'default',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(253,236,200,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(232,130,10,0.5)';
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(253,236,200,0.06)';
-                  e.currentTarget.style.borderColor = 'rgba(253,236,200,0.2)';
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  background: 'rgba(253,236,200,0.05)',
+                  border: '1px solid rgba(253,236,200,0.12)',
                 }}
               >
-                <div style={{
-                  width: 36, height: 36,
-                  borderRadius: '50%',
-                  background: 'rgba(232,130,10,0.2)',
-                  border: '1.5px solid rgba(232,130,10,0.5)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: 16,
-                  color: '#F5B830',
-                }}>
+                <div
+                  className="w-11 h-11 rounded-lg flex items-center justify-center mb-4"
+                  style={{ background: 'rgba(232,130,10,0.15)', border: '1px solid rgba(232,130,10,0.3)', color: '#F5B830' }}
+                >
                   <feat.icon className="w-5 h-5" />
                 </div>
-                <h3 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '1.15rem',
-                  fontWeight: 700,
-                  color: '#FDECC8',
-                  marginBottom: 8,
-                }}>
+                <h3 className="text-base font-bold mb-2" style={{ color: '#FDECC8', fontFamily: "'Playfair Display', serif" }}>
                   <span className="hi-text">{feat.hiTitle}</span>
                   <span className="en-text">{feat.enTitle}</span>
                 </h3>
-                <p style={{
-                  fontSize: '0.85rem',
-                  color: 'rgba(253,236,200,0.65)',
-                  fontFamily: 'Hind Siliguri, sans-serif',
-                  lineHeight: 1.65,
-                }}>
+                <p className="text-sm" style={{ color: 'rgba(253,236,200,0.6)', lineHeight: 1.6, fontFamily: 'Hind Siliguri, sans-serif' }}>
                   <span className="hi-text">{feat.hiDesc}</span>
                   <span className="en-text">{feat.enDesc}</span>
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          {/* Flow diagram */}
-          <div style={{
-            background: 'rgba(253,236,200,0.06)',
-            border: '1px solid rgba(253,236,200,0.15)',
-            borderRadius: 8,
-            padding: '1.5rem 2rem',
-          }}>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {[
-                { hi: 'आवाज़/टेक्स्ट', en: 'Voice/Text' },
-                '→',
-                { hi: 'AI प्रोसेसिंग', en: 'AI Processing' },
-                '→',
-                { hi: 'प्राथमिकता स्कोर', en: 'Priority Score' },
-                '→',
-                { hi: 'विभाग रूटिंग', en: 'Dept Routing' },
-                '→',
-                { hi: 'समाधान ट्रैकिंग', en: 'Resolution Tracking' },
-              ].map((step, i) => (
-                <span
-                  key={i}
-                  style={{
-                    color: step === '→' ? 'rgba(232,130,10,0.6)' : '#FDECC8',
-                    fontFamily: step === '→' ? 'serif' : 'Hind Siliguri, sans-serif',
-                    fontSize: step === '→' ? '1.5rem' : '0.85rem',
-                    fontWeight: step === '→' ? 300 : 500,
-                    padding: step === '→' ? '0 4px' : '6px 14px',
-                    background: step === '→' ? 'none' : 'rgba(253,236,200,0.08)',
-                    borderRadius: step === '→' ? 0 : 4,
-                    border: step === '→' ? 'none' : '1px solid rgba(253,236,200,0.15)',
-                  }}
-                >
-                  {step === '→' ? '→' : (
-                    <>
-                      <span className="hi-text">{step.hi}</span>
-                      <span className="en-text">{step.en}</span>
-                    </>
+          {/* Pipeline flow */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="p-6 rounded-lg"
+            style={{ background: 'rgba(253,236,200,0.05)', border: '1px solid rgba(253,236,200,0.12)' }}
+          >
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {pipelineSteps.map((step, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span
+                    className="px-4 py-2 rounded-md text-sm font-medium"
+                    style={{
+                      background: 'rgba(253,236,200,0.08)',
+                      border: '1px solid rgba(253,236,200,0.15)',
+                      color: '#FDECC8',
+                      fontFamily: 'Hind Siliguri, sans-serif',
+                    }}
+                  >
+                    <span className="hi-text">{step.hi}</span>
+                    <span className="en-text">{step.en}</span>
+                  </span>
+                  {i < pipelineSteps.length - 1 && (
+                    <ArrowRight className="w-4 h-4 hidden sm:block" style={{ color: 'rgba(232,130,10,0.6)' }} />
                   )}
-                </span>
+                </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── Jaali Divider ── */}
-      <JaaliSeparator />
+      {/* ═══════════ BEFORE VS AFTER ═══════════ */}
+      <section className="section-padding" style={{ background: '#FDECC8' }}>
+        <div className="container-main">
+          <SectionHeader
+            badge={{ hi: 'परिवर्तन', en: 'The Transformation' }}
+            badgeIcon={TrendingUp}
+            hiTitle={<>अव्यवस्था से <span className="gradient-text-heritage">स्पष्टता</span> तक</>}
+            enTitle={<>From Chaos to <span className="gradient-text-heritage">Clarity</span></>}
+            hiSub="देखें कैसे जनवाणी पारंपरिक शासन को बदलती है"
+            enSub="See how JanVaani transforms traditional governance"
+          />
 
-      {/* ════════════════════════════════
-          BEFORE vs AFTER
-          ════════════════════════════════ */}
-      <section
-        id="transformation"
-        className="relative py-24"
-        style={{ background: 'var(--color-bg)' }}
-      >
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <SectionBadge icon={TrendingUp} hiText="परिवर्तन" enText="The Transformation" />
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontWeight: 700,
-              color: 'var(--color-primary)',
-              marginBottom: '1rem',
-            }}>
-              <span className="hi-text">अव्यवस्था से </span>
-              <span className="en-text">From Chaos to </span>
-              <span style={{
-                background: 'linear-gradient(135deg, var(--color-amber), var(--color-primary))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                <span className="hi-text">स्पष्टता</span>
-                <span className="en-text">Clarity</span>
-              </span>
-            </h2>
-            <p className="subheading max-w-xl mx-auto">
-              <span className="hi-text">देखें कैसे जनवाणी पारंपरिक शासन को बदलती है</span>
-              <span className="en-text">See how JanVaani transforms traditional governance</span>
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto relative">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* BEFORE */}
-            <div
-              className="heritage-card p-8 animate-slide-up"
-              style={{ borderColor: 'rgba(212,46,24,0.3)', animationFillMode: 'both' }}
-            >
+            <AnimatedCard className="p-7 overflow-hidden" style={{ borderColor: 'rgba(212,46,24,0.3)' }}>
               <div className="flex items-center gap-3 mb-6">
-                <div style={{
-                  width: 44, height: 44, borderRadius: 8,
-                  background: 'rgba(212,46,24,0.08)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
+                <div className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212,46,24,0.1)' }}>
                   <AlertTriangle className="w-5 h-5" style={{ color: '#D42E18' }} />
                 </div>
                 <div>
-                  <h3 style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: '1.2rem',
-                    color: '#D42E18',
-                    fontWeight: 700,
-                  }}>
+                  <h3 className="text-lg font-bold" style={{ color: '#D42E18', fontFamily: "'Playfair Display', serif" }}>
                     <span className="hi-text">जनवाणी से पहले</span>
                     <span className="en-text">Before JanVaani</span>
                   </h3>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                  <p className="text-xs" style={{ color: '#3D2A18', opacity: 0.6, fontFamily: 'Hind Siliguri' }}>
                     <span className="hi-text">पारंपरिक शासन</span>
                     <span className="en-text">Traditional Governance</span>
                   </p>
@@ -733,48 +498,37 @@ export default function LandingPage() {
               </div>
               <div className="space-y-3">
                 {beforeItems.map((item, i) => (
-                  <div
+                  <motion.div
                     key={i}
-                    className="flex items-start gap-3 p-3 rounded-md"
-                    style={{
-                      background: 'rgba(212,46,24,0.04)',
-                      border: '1px solid rgba(212,46,24,0.12)',
-                    }}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    viewport={{ once: true }}
+                    className="flex items-start gap-3 p-3 rounded-lg"
+                    style={{ background: 'rgba(212,46,24,0.08)', border: '1px solid rgba(212,46,24,0.2)' }}
                   >
                     <item.icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#D42E18' }} />
-                    <span style={{ fontSize: '0.85rem', color: 'var(--color-ink)', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <span className="text-sm" style={{ color: '#1A1208', fontFamily: 'Hind Siliguri, sans-serif' }}>
                       <span className="hi-text">{item.hiText}</span>
                       <span className="en-text">{item.enText}</span>
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </AnimatedCard>
 
             {/* AFTER */}
-            <div
-              className="heritage-card p-8 animate-slide-up animate-delay-200"
-              style={{ borderColor: 'rgba(26,122,138,0.35)', animationFillMode: 'both' }}
-            >
+            <AnimatedCard delay={0.2} className="p-7 overflow-hidden" style={{ borderColor: 'rgba(4,120,87,0.3)' }}>
               <div className="flex items-center gap-3 mb-6">
-                <div style={{
-                  width: 44, height: 44, borderRadius: 8,
-                  background: 'rgba(26,122,138,0.08)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <CheckCircle2 className="w-5 h-5" style={{ color: '#1A7A8A' }} />
+                <div className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ background: 'rgba(4,120,87,0.1)' }}>
+                  <CheckCircle2 className="w-5 h-5" style={{ color: '#047857' }} />
                 </div>
                 <div>
-                  <h3 style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: '1.2rem',
-                    color: '#1A7A8A',
-                    fontWeight: 700,
-                  }}>
+                  <h3 className="text-lg font-bold" style={{ color: '#047857', fontFamily: "'Playfair Display', serif" }}>
                     <span className="hi-text">जनवाणी के साथ</span>
                     <span className="en-text">With JanVaani</span>
                   </h3>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                  <p className="text-xs" style={{ color: '#3D2A18', opacity: 0.6, fontFamily: 'Hind Siliguri' }}>
                     <span className="hi-text">AI-संचालित शासन</span>
                     <span className="en-text">AI-Powered Governance</span>
                   </p>
@@ -782,114 +536,83 @@ export default function LandingPage() {
               </div>
               <div className="space-y-3">
                 {afterItems.map((item, i) => (
-                  <div
+                  <motion.div
                     key={i}
-                    className="flex items-start gap-3 p-3 rounded-md"
-                    style={{
-                      background: 'rgba(26,122,138,0.04)',
-                      border: '1px solid rgba(26,122,138,0.12)',
-                    }}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    viewport={{ once: true }}
+                    className="flex items-start gap-3 p-3 rounded-lg"
+                    style={{ background: 'rgba(4,120,87,0.08)', border: '1px solid rgba(4,120,87,0.2)' }}
                   >
-                    <item.icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#1A7A8A' }} />
-                    <span style={{ fontSize: '0.85rem', color: 'var(--color-ink)', fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <item.icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#047857' }} />
+                    <span className="text-sm" style={{ color: '#1A1208', fontFamily: 'Hind Siliguri, sans-serif' }}>
                       <span className="hi-text">{item.hiText}</span>
                       <span className="en-text">{item.enText}</span>
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
-
-            {/* Center arrow */}
-            <div className="hidden md:flex items-center justify-center my-2" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--color-amber), var(--color-primary))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(196,68,10,0.35), 0 0 0 4px rgba(232,130,10,0.2)',
-                color: 'white',
-              }}>
-                <ArrowRight className="w-6 h-6" />
-              </div>
-            </div>
+            </AnimatedCard>
           </div>
         </div>
       </section>
 
-      {/* ── Jaali Divider ── */}
-      <JaaliSeparator />
-
-      {/* ════════════════════════════════
-          CTA SECTION
-          ════════════════════════════════ */}
-      <section className="relative py-24" style={{ background: 'var(--color-bg)' }}>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div
-            className="heritage-card p-12 sm:p-16"
-            style={{
-              borderColor: 'rgba(232,130,10,0.4)',
-              boxShadow: '0 16px 60px rgba(196,68,10,0.12)',
-            }}
+      {/* ═══════════ CTA SECTION ═══════════ */}
+      <section className="py-20" style={{ background: 'linear-gradient(135deg, #C4440A 0%, #a3370a 100%)' }}>
+        <div className="container-main text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
           >
-            {/* Top ornament */}
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, rgba(232,130,10,0.6))' }}/>
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <path d="M14 2 L17 11 L26 11 L19 17 L22 26 L14 20 L6 26 L9 17 L2 11 L11 11 Z"
-                  fill="none" stroke="#E8820A" strokeWidth="1.5"/>
-              </svg>
-              <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, rgba(232,130,10,0.6), transparent)' }}/>
-            </div>
-
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-              fontWeight: 700,
-              color: 'var(--color-primary)',
-              marginBottom: '0.75rem',
-            }}>
-              <span className="hi-text">शासन को बदलने के लिए </span>
-              <span className="en-text">Ready to Transform </span>
-              <span style={{
-                background: 'linear-gradient(135deg, var(--color-amber), var(--color-primary))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                <span className="hi-text">तैयार हैं?</span>
-                <span className="en-text">Governance?</span>
-              </span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#FDECC8', fontFamily: "'Playfair Display', serif" }}>
+              <span className="hi-text">आज ही अपनी आवाज़ उठाएं</span>
+              <span className="en-text">Raise Your Voice Today</span>
             </h2>
-            <p className="subheading mb-10 max-w-lg mx-auto">
-              <span className="hi-text">पारदर्शी, AI-संचालित सार्वजनिक प्रशासन की ओर आंदोलन में शामिल हों।</span>
-              <span className="en-text">Join the movement towards transparent, AI-powered public administration.</span>
+            <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: 'rgba(253,236,200,0.8)', fontFamily: 'Hind Siliguri, sans-serif' }}>
+              <span className="hi-text">जनवाणी के साथ अपनी शिकायत दर्ज करें और AI-संचालित समाधान पाएं।</span>
+              <span className="en-text">File your grievance with JanVaani and get AI-powered resolution.</span>
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <GsapButton
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Link
                 to="/report"
-                id="cta-report-btn"
-                className="btn-primary flex items-center gap-2"
-                style={{ fontSize: '1rem', padding: '0.9rem 2rem' }}
+                className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold rounded-md transition-all"
+                style={{
+                  background: '#FDECC8',
+                  color: '#C4440A',
+                  fontFamily: 'Hind Siliguri, sans-serif',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                }}
               >
                 <span className="hi-text">शिकायत दर्ज करें</span>
                 <span className="en-text">File a Complaint</span>
-                <ChevronRight className="w-5 h-5" />
-              </GsapButton>
-              <GsapButton
-                to="/dashboard"
-                id="cta-dashboard-btn"
-                className="btn-secondary flex items-center gap-2"
-                style={{ fontSize: '1rem', padding: '0.9rem 2rem' }}
-              >
-                <span className="hi-text">डैशबोर्ड देखें</span>
-                <span className="en-text">Explore Dashboard</span>
-                <BarChart3 className="w-5 h-5" />
-              </GsapButton>
-            </div>
-          </div>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
+
+      {/* ═══════════ FLOATING CTA ═══════════ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: showFloatingCta ? 1 : 0, y: showFloatingCta ? 0 : 20 }}
+        className="fixed bottom-6 right-6 z-40"
+        style={{ pointerEvents: showFloatingCta ? 'auto' : 'none' }}
+      >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Link
+            to="/report"
+            className="btn-primary flex items-center gap-2 px-5 py-3 text-sm"
+            style={{ boxShadow: '0 8px 30px rgba(196,68,10,0.5)' }}
+          >
+            <Mic className="w-4 h-4" />
+            <span className="hi-text">शिकायत दर्ज करें</span>
+            <span className="en-text">File Complaint</span>
+          </Link>
+        </motion.div>
+      </motion.div>
 
       <Footer />
     </div>

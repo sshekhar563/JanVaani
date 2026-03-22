@@ -1,48 +1,37 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, UserPlus, LogOut } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import Logo from './Logo';
-import gsap from 'gsap';
+import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * Navbar — Sticky header with bilingual nav links, language toggle, and auth buttons.
+ * Mobile hamburger menu with slide-down animation.
+ * Original Oil Painting palette: ink background, cream text, gold/amber accents.
+ */
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
-  const { t } = useTranslation();
   const { isAuthenticated, logout } = useAuth();
   const { lang, setLang } = useLang();
 
+  // Detect scroll for navbar background change
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // GSAP button animations
-  const navBtnsRef = useRef([]);
-  useEffect(() => {
-    navBtnsRef.current.forEach(btn => {
-      if (!btn) return;
-      const onEnter = () => gsap.to(btn, { scale: 1.05, duration: 0.2, ease: 'power2.out' });
-      const onLeave = () => gsap.to(btn, { scale: 1, duration: 0.2, ease: 'power2.out' });
-      btn.addEventListener('mouseenter', onEnter);
-      btn.addEventListener('mouseleave', onLeave);
-      btn._gsapCleanup = () => {
-        btn.removeEventListener('mouseenter', onEnter);
-        btn.removeEventListener('mouseleave', onLeave);
-      };
-    });
-    return () => navBtnsRef.current.forEach(btn => btn?._gsapCleanup?.());
-  }, []);
+  // Close mobile menu on route change
+  useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
   const navLinks = [
-    { to: '/',          hiLabel: 'घर',              enLabel: 'Home' },
-    { to: '/report',    hiLabel: 'शिकायत दर्ज करें', enLabel: 'File Complaint' },
-    { to: '/dashboard', hiLabel: 'डैशबोर्ड',         enLabel: 'Dashboard' },
+    { to: '/',       hiLabel: 'घर',              enLabel: 'Home' },
+    { to: '/report', hiLabel: 'शिकायत दर्ज करें', enLabel: 'File Complaint' },
+    { to: '/dashboard', hiLabel: 'डैशबोर्ड',     enLabel: 'Dashboard' },
   ];
 
   return (
@@ -56,6 +45,8 @@ export default function Navbar() {
           : '1px solid rgba(245,184,48,0.1)',
         boxShadow: scrolled ? '0 4px 24px rgba(26,18,8,0.3)' : 'none',
       }}
+      role="navigation"
+      aria-label="Main Navigation"
     >
       {/* Top accent line */}
       <div style={{
@@ -69,17 +60,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group" id="nav-logo">
-            <div className="transition-transform duration-300 group-hover:scale-110">
+          <Link to="/" className="flex items-center gap-2.5 group" id="nav-logo" aria-label="JanVaani Home">
+            <motion.div whileHover={{ scale: 1.1 }} transition={{ type: 'spring', stiffness: 300 }}>
               <Logo size={40} />
-            </div>
+            </motion.div>
             <div className="flex flex-col leading-tight">
               <span
                 className="text-lg font-bold tracking-tight"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  color: '#FDECC8',
-                }}
+                style={{ fontFamily: "'Playfair Display', serif", color: '#FDECC8' }}
               >
                 JanVaani
               </span>
@@ -107,6 +95,7 @@ export default function Navbar() {
                     fontFamily: 'Hind Siliguri, sans-serif',
                     fontWeight: isActive ? 600 : 500,
                   }}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <span className="hi-text">{link.hiLabel}</span>
                   <span className="en-text">{link.enLabel}</span>
@@ -126,26 +115,29 @@ export default function Navbar() {
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center gap-2.5">
             {/* Language Toggle Pill */}
-            <div className="lang-toggle lang-toggle-nav">
+            <div className="lang-toggle lang-toggle-nav" role="group" aria-label="Language Selection">
               <button
                 className={lang === 'hi' ? 'active' : ''}
                 onClick={() => setLang('hi')}
+                aria-pressed={lang === 'hi'}
               >
                 हिंदी
               </button>
               <button
                 className={lang === 'en' ? 'active' : ''}
                 onClick={() => setLang('en')}
+                aria-pressed={lang === 'en'}
               >
                 English
               </button>
             </div>
 
             {isAuthenticated ? (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 id="logout-btn"
                 onClick={logout}
-                ref={el => navBtnsRef.current[0] = el}
                 className="btn-gsap px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200"
                 style={{
                   color: '#FDECC8',
@@ -156,13 +148,12 @@ export default function Navbar() {
                 <LogOut className="w-4 h-4 inline mr-1" />
                 <span className="hi-text">लॉगआउट</span>
                 <span className="en-text">Logout</span>
-              </button>
+              </motion.button>
             ) : (
               <>
                 <Link
                   to="/login"
                   id="nav-login-btn"
-                  ref={el => navBtnsRef.current[1] = el}
                   className="btn-gsap px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200"
                   style={{
                     color: '#FDECC8',
@@ -175,16 +166,17 @@ export default function Navbar() {
                   <span className="hi-text">लॉगिन</span>
                   <span className="en-text">Login</span>
                 </Link>
-                <Link
-                  to="/signup"
-                  id="nav-signup-btn"
-                  ref={el => navBtnsRef.current[2] = el}
-                  className="btn-primary btn-gsap text-sm py-2 px-5"
-                >
-                  <UserPlus className="w-4 h-4 inline mr-1" />
-                  <span className="hi-text">साइन अप</span>
-                  <span className="en-text">Sign Up</span>
-                </Link>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    to="/signup"
+                    id="nav-signup-btn"
+                    className="btn-primary btn-gsap text-sm py-2 px-5"
+                  >
+                    <UserPlus className="w-4 h-4 inline mr-1" />
+                    <span className="hi-text">साइन अप</span>
+                    <span className="en-text">Sign Up</span>
+                  </Link>
+                </motion.div>
               </>
             )}
           </div>
@@ -195,6 +187,9 @@ export default function Navbar() {
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 rounded-lg transition-colors"
             style={{ color: '#FDECC8' }}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -202,82 +197,79 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <div
-          className="md:hidden border-t animate-slide-up"
-          style={{
-            background: '#1A1208',
-            borderColor: 'rgba(245,184,48,0.2)',
-          }}
-        >
-          <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setIsOpen(false)}
-                className="block px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                style={{
-                  color: '#FDECC8',
-                  fontFamily: 'Hind Siliguri, sans-serif',
-                }}
-              >
-                <span className="hi-text">{link.hiLabel}</span>
-                <span className="en-text">{link.enLabel}</span>
-              </Link>
-            ))}
-
-            <div className="border-t my-3" style={{ borderColor: 'rgba(245,184,48,0.2)' }} />
-
-            {/* Mobile Language Toggle */}
-            <div className="px-4 py-2">
-              <div className="lang-toggle lang-toggle-nav">
-                <button
-                  className={lang === 'hi' ? 'active' : ''}
-                  onClick={() => setLang('hi')}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            id="mobile-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="md:hidden overflow-hidden"
+            style={{
+              background: '#1A1208',
+              borderTop: '1px solid rgba(245,184,48,0.2)',
+            }}
+          >
+            <div className="px-4 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    color: '#FDECC8',
+                    fontFamily: 'Hind Siliguri, sans-serif',
+                  }}
                 >
-                  हिंदी
-                </button>
-                <button
-                  className={lang === 'en' ? 'active' : ''}
-                  onClick={() => setLang('en')}
-                >
-                  English
-                </button>
+                  <span className="hi-text">{link.hiLabel}</span>
+                  <span className="en-text">{link.enLabel}</span>
+                </Link>
+              ))}
+
+              <div className="border-t my-3" style={{ borderColor: 'rgba(245,184,48,0.2)' }} />
+
+              {/* Mobile Language Toggle */}
+              <div className="px-4 py-2">
+                <div className="lang-toggle lang-toggle-nav">
+                  <button className={lang === 'hi' ? 'active' : ''} onClick={() => setLang('hi')}>हिंदी</button>
+                  <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>English</button>
+                </div>
               </div>
-            </div>
 
-            {isAuthenticated ? (
-              <button
-                onClick={() => { logout(); setIsOpen(false); }}
-                className="flex w-full items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
-                style={{ color: '#D42E18' }}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hi-text">लॉगआउट</span>
-                <span className="en-text">Logout</span>
-              </button>
-            ) : (
-              <>
-                <Link to="/login" onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
-                  style={{ color: '#FDECC8', fontFamily: 'Hind Siliguri, sans-serif' }}
+              {isAuthenticated ? (
+                <button
+                  onClick={() => { logout(); setIsOpen(false); }}
+                  className="flex w-full items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
+                  style={{ color: '#D42E18' }}
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hi-text">लॉगिन</span>
-                  <span className="en-text">Login</span>
-                </Link>
-                <Link to="/signup" onClick={() => setIsOpen(false)}
-                  className="btn-primary w-full text-center block text-sm mt-2"
-                >
-                  <span className="hi-text">साइन अप</span>
-                  <span className="en-text">Sign Up</span>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                  <LogOut className="w-4 h-4" />
+                  <span className="hi-text">लॉगआउट</span>
+                  <span className="en-text">Logout</span>
+                </button>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm transition-all"
+                    style={{ color: '#FDECC8', fontFamily: 'Hind Siliguri, sans-serif' }}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span className="hi-text">लॉगिन</span>
+                    <span className="en-text">Login</span>
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsOpen(false)}
+                    className="btn-primary w-full text-center block text-sm mt-2"
+                  >
+                    <span className="hi-text">साइन अप</span>
+                    <span className="en-text">Sign Up</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

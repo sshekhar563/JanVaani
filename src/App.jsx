@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useLayoutEffect, useRef, useEffect } from 'react';
-import gsap from 'gsap';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import CitizenPortal from './pages/CitizenPortal';
@@ -21,62 +20,35 @@ function ProtectedRoute({ children, allowedRoles }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FDECC8' }}>
         <div style={{ textAlign: 'center' }}>
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="mx-auto mb-4 animate-spin-slow">
-            <circle cx="28" cy="28" r="24" stroke="rgba(232,130,10,0.2)" strokeWidth="3"/>
-            <path d="M28 4 A24 24 0 0 1 52 28" stroke="var(--color-amber)" strokeWidth="3" strokeLinecap="round"/>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <line
-                key={i}
-                x1="28" y1="28"
-                x2={28 + 14 * Math.cos((i * Math.PI) / 4)}
-                y2={28 + 14 * Math.sin((i * Math.PI) / 4)}
-                stroke="rgba(196,68,10,0.25)" strokeWidth="1"
-              />
-            ))}
-            <circle cx="28" cy="28" r="3" fill="var(--color-primary)"/>
-          </svg>
-          <p className="hi-text" style={{ fontFamily: "'Noto Serif Devanagari', serif", color: 'var(--color-amber)', fontSize: '0.85rem' }}>
-            लोड हो रहा है...
-          </p>
-          <p className="en-text" style={{ fontFamily: "'Hind Siliguri', sans-serif", color: 'var(--color-amber)', fontSize: '0.85rem' }}>
-            Loading...
-          </p>
+          <div className="spinner mx-auto mb-4" />
+          <p className="hi-text text-sm" style={{ color: '#3D2A18', fontFamily: 'Hind Siliguri' }}>लोड हो रहा है...</p>
+          <p className="en-text text-sm" style={{ color: '#3D2A18', fontFamily: 'Hind Siliguri' }}>Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
-
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 
-function AppContent() {
+function AnimatedRoutes() {
   const location = useLocation();
-  const pageRef = useRef(null);
-
-  useLayoutEffect(() => {
-    if (pageRef.current) {
-      gsap.fromTo(pageRef.current,
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
-      );
-    }
-  }, [location.pathname]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
-      <Navbar />
-      <div ref={pageRef} style={{ position: 'relative', zIndex: 1 }}>
-        <Routes>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        style={{ position: 'relative', zIndex: 1 }}
+      >
+        <Routes location={location}>
           <Route path="/"             element={<LandingPage />} />
           <Route path="/report"       element={<CitizenPortal />} />
           <Route path="/dashboard"    element={
@@ -90,7 +62,16 @@ function AppContent() {
           <Route path="/admin/signup" element={<AdminSignup />} />
           <Route path="*"             element={<NotFound />} />
         </Routes>
-      </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function AppContent() {
+  return (
+    <div className="min-h-screen" style={{ background: '#FDECC8' }}>
+      <Navbar />
+      <AnimatedRoutes />
     </div>
   );
 }
