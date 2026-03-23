@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   MapPin, Clock, Brain, ChevronRight, X, AlertTriangle, 
-  TrendingUp, Mic, Type, Image, Shield
+  TrendingUp, Mic, Type, Image, Shield, Loader2
 } from 'lucide-react';
-import { issues } from '../../data/mockData';
 
 function IssueModal({ issue, onClose, onRefresh }) {
   const [updating, setUpdating] = useState(false);
@@ -142,7 +141,7 @@ function IssueModal({ issue, onClose, onRefresh }) {
 
 export default function PriorityInbox() {
   const [selectedIssue, setSelectedIssue] = useState(null);
-  const [liveIssues, setLiveIssues] = useState([...issues]);
+  const [liveIssues, setLiveIssues] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchIssues = () => {
@@ -153,26 +152,30 @@ export default function PriorityInbox() {
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const formatted = data.map(c => ({
-            id: c.tracking_id,
-            actual_id: c._id,
-            title: c.category.charAt(0).toUpperCase() + c.category.slice(1) + ' Issue',
-            description: c.description,
-            location: c.location,
-            category: c.category,
-            reportedBy: 'Citizen',
-            inputMode: 'text',
-            aiAnalysis: `Sentiment: ${c.analysis.sentiment}, Urgency: ${c.analysis.urgency}`,
-            urgencyScore: c.analysis.urgency * 100,
-            publicImpact: c.analysis.sentiment === 'NEGATIVE' ? 'High' : 'Medium',
-            sentiment: c.analysis.sentiment,
-            sentimentScore: c.analysis.sentiment === 'NEGATIVE' ? '-0.8' : '0.0',
-            aiScore: Math.round(c.analysis.urgency * 100),
-            status: c.status || 'Pending',
-            tags: [c.analysis.urgency > 0.7 ? 'High Priority' : 'Geotagged'],
-            reportedAt: c.created_at,
-          }));
+        if (Array.isArray(data)) {
+          const formatted = data.map(c => {
+            const analysis = c.analysis || {};
+            const cat = c.category || 'general';
+            return {
+              id: c.tracking_id || c._id,
+              actual_id: c._id,
+              title: cat.charAt(0).toUpperCase() + cat.slice(1) + ' Issue',
+              description: c.description || '',
+              location: c.location || 'Unknown',
+              category: cat,
+              reportedBy: 'Citizen',
+              inputMode: 'text',
+              aiAnalysis: analysis.sentiment ? `Sentiment: ${analysis.sentiment}, Urgency: ${analysis.urgency || 0.5}` : 'Pending analysis',
+              urgencyScore: (analysis.urgency || 0.5) * 100,
+              publicImpact: analysis.sentiment === 'NEGATIVE' ? 'High' : 'Medium',
+              sentiment: analysis.sentiment || 'NEUTRAL',
+              sentimentScore: analysis.sentiment === 'NEGATIVE' ? '-0.8' : '0.0',
+              aiScore: Math.round((analysis.urgency || 0.5) * 100),
+              status: c.status || 'Pending',
+              tags: [(analysis.urgency || 0) > 0.7 ? 'High Priority' : 'Geotagged'],
+              reportedAt: c.created_at || new Date().toISOString(),
+            };
+          });
           setLiveIssues(formatted);
         }
         setLoading(false);

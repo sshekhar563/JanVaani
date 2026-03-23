@@ -1,0 +1,5 @@
+# Additional dependencies for Smart Governance modules
+# Install with:  pip install -r backend/requirements_new.txt
+pandas
+scikit-learn
+imagehash

@@ -40,3 +40,13 @@ env/
 .coverage
 htmlcov/
 temp/
+
+# Large Datasets & Images
+datasets/
+data/India/
+News_Dataset/
+twcs/
+*.csv
+*.xlsx
+*.json
+backend/uploads/

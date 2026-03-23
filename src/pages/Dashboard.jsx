@@ -1,6 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import AdminDashboard from '../components/dashboard/AdminDashboard';
-import CitizenDashboard from '../components/dashboard/CitizenDashboard';
+import OfficerDashboard from '../components/dashboard/OfficerDashboard';
+import PublicDashboard from '../components/dashboard/PublicDashboard';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -15,11 +16,15 @@ export default function Dashboard() {
     );
   }
 
-  // Render the appropriate dashboard based on user role
+  // Route based on role
   if (user?.role === 'public') {
-    return <CitizenDashboard />;
+    return <PublicDashboard />;
   }
 
-  // Default to Admin Dashboard for admins and departments
+  if (user?.role === 'department') {
+    return <OfficerDashboard />;
+  }
+
+  // Default: admin gets full admin dashboard with governance
   return <AdminDashboard />;
 }

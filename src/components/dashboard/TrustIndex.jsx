@@ -1,12 +1,52 @@
+import { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { TrendingUp, Zap, Heart, Shield, MessageCircle } from 'lucide-react';
-import { trustIndexData } from '../../data/mockData';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function TrustIndex() {
-  const { overall, metrics } = trustIndexData;
+  const [trustData, setTrustData] = useState({
+    overall: 73,
+    metrics: {
+      issueResolution: 78,
+      citizenSentiment: 65,
+      verifiedWorkProof: 82,
+      communicationTransparency: 68,
+    },
+  });
+
+  useEffect(() => {
+    fetch('/api/trust/city')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.city_trust_score) {
+          const areas = data.areas || [];
+          const avgSpeed = areas.length > 0
+            ? Math.round(areas.reduce((s, a) => s + (a.speed_score || 0), 0) / areas.length)
+            : 78;
+          const avgRating = areas.length > 0
+            ? Math.round(areas.reduce((s, a) => s + (a.citizen_rating || 0), 0) / areas.length)
+            : 65;
+          const avgVerify = areas.length > 0
+            ? Math.round(areas.reduce((s, a) => s + (a.verification_score || 0), 0) / areas.length)
+            : 82;
+
+          setTrustData({
+            overall: Math.round(data.city_trust_score),
+            metrics: {
+              issueResolution: avgSpeed,
+              citizenSentiment: avgRating,
+              verifiedWorkProof: avgVerify,
+              communicationTransparency: Math.round((avgSpeed + avgRating) / 2 * 0.9),
+            },
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const { overall, metrics } = trustData;
 
   const chartData = {
     labels: ['Resolution Speed', 'Citizen Sentiment', 'Verified Proof', 'Communication'],
@@ -70,7 +110,7 @@ export default function TrustIndex() {
   ];
 
   const colorMap = {
-    trust: { bar: 'bg-teal-500', text: 'text-teal-400' },
+    teal: { bar: 'bg-teal-500', text: 'text-teal-400' },
     amber: { bar: 'bg-amber-500', text: 'text-amber-400' },
     blue: { bar: 'bg-blue-500', text: 'text-blue-400' },
     purple: { bar: 'bg-purple-500', text: 'text-purple-400' },

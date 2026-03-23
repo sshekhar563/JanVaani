@@ -73,6 +73,15 @@ async def startup_db():
         complaints_collection = None
         pothole_reports_collection = None
 
+    # Wire shared DB handle for governance routes
+    try:
+        from db import set_db
+        if db is not None:
+            set_db(db)
+            print("[Governance] Shared DB handle set")
+    except Exception as e:
+        print(f"[Governance] DB handle setup failed: {e}")
+
     # Ensure directories exist
     os.makedirs("temp", exist_ok=True)
     os.makedirs(UPLOADS_DIR, exist_ok=True)
@@ -367,6 +376,43 @@ async def update_complaint_status(complaint_id: str, status_update: ComplaintSta
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid complaint ID format")
 
+
+@app.get("/api/complaints/{complaint_id}")
+async def get_complaint_by_id(complaint_id: str, current_user: dict = Depends(require_current_user)):
+    if complaints_collection is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    try:
+        comp = await complaints_collection.find_one({"_id": ObjectId(complaint_id)})
+        if not comp:
+            raise HTTPException(status_code=404, detail="Complaint not found")
+        comp["_id"] = str(comp["_id"])
+        return comp
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid complaint ID")
+
+
+@app.get("/api/complaints/{complaint_id}/status")
+async def get_complaint_status(complaint_id: str):
+    if complaints_collection is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    try:
+        comp = await complaints_collection.find_one({"_id": ObjectId(complaint_id)})
+        if not comp:
+            raise HTTPException(status_code=404, detail="Complaint not found")
+        comp["_id"] = str(comp["_id"])
+        return {
+            "complaint_id": comp["_id"],
+            "status": comp.get("status", "Pending"),
+            "workflow_status": comp.get("workflow_status", "complaint_created"),
+            "timeline": comp.get("timeline", []),
+            "assigned_officer": comp.get("assigned_officer"),
+            "proof_image_url": comp.get("proof_image_url"),
+            "ai_verification": comp.get("ai_verification"),
+            "citizen_feedback": comp.get("citizen_feedback"),
+        }
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid complaint ID")
+
 # -----------------------------------------------------------------------
 # Pothole Detection Endpoints
 # -----------------------------------------------------------------------
@@ -477,3 +523,13 @@ async def get_pothole_stats():
         "detected": detected,
     }
 
+
+# -----------------------------------------------------------------------
+# Register Governance Routers (must be at module level for FastAPI)
+# -----------------------------------------------------------------------
+try:
+    import register_routers
+    register_routers.register(app)
+    print("[Governance] All governance routers registered")
+except Exception as e:
+    print(f"[Governance] Router registration failed: {e}")

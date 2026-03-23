@@ -4,10 +4,16 @@ import StatsCards from './StatsCards';
 import PriorityInbox from './PriorityInbox';
 import TrustIndex from './TrustIndex';
 import ProofOfWork from './ProofOfWork';
+import GeoAnalytics from '../../pages/governance/GeoAnalytics';
+import FraudDetection from '../../pages/governance/FraudDetection';
+import OfficerPerformance from '../../pages/governance/OfficerPerformance';
+import PublicTrust from '../../pages/governance/PublicTrust';
+import DigitalTwin from '../../pages/governance/DigitalTwin';
+import Predictions from '../../pages/governance/Predictions';
 import { 
   Bell, Search, User, Calendar, Shield, ChevronDown,
   BarChart3, TrendingUp, Activity, Camera, MapPin, Clock,
-  AlertTriangle, Eye
+  AlertTriangle, Eye, UserPlus
 } from 'lucide-react';
 import { trustIndexData } from '../../data/mockData';
 import { useTranslation } from 'react-i18next';
@@ -283,6 +289,75 @@ function AnalyticsView() {
   );
 }
 
+// ── Assign Officer Component ──────────────────────────────────────
+function AssignOfficerView() {
+  const [complaints, setComplaints] = useState([]);
+  const [officers, setOfficers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [assigning, setAssigning] = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/complaints', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(r => r.json()).catch(() => []),
+      fetch('/api/workflow/officers').then(r => r.json()).catch(() => []),
+    ]).then(([c, o]) => {
+      setComplaints(Array.isArray(c) ? c : []);
+      setOfficers(Array.isArray(o) ? o : []);
+      setLoading(false);
+    });
+  }, []);
+
+  const assign = async (compId, officerEmail) => {
+    setAssigning(compId);
+    try {
+      await fetch('/api/workflow/assign', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ complaint_id: compId, officer_email: officerEmail }),
+      });
+      setComplaints(prev => prev.map(c => c._id === compId ? { ...c, assigned_officer: officerEmail, status: 'Assigned' } : c));
+    } catch { }
+    setAssigning(null);
+  };
+
+  const unassigned = complaints.filter(c => !c.assigned_officer);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+          <UserPlus className="w-5 h-5 text-cyan-400" /> Assign Complaints to Officers
+        </h3>
+        <p className="text-xs text-gray-500 mb-4">{unassigned.length} unassigned complaints</p>
+        {loading ? <p className="text-gray-500">Loading...</p> : unassigned.length === 0 ? (
+          <p className="text-gray-500 text-sm py-6 text-center">All complaints are assigned ✓</p>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {unassigned.slice(0, 20).map(c => (
+              <div key={c._id} className="flex items-center gap-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{c.category || 'Complaint'}</p>
+                  <p className="text-xs text-gray-500">{c.location} — {c.tracking_id}</p>
+                </div>
+                <select
+                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  defaultValue=""
+                  onChange={e => e.target.value && assign(c._id, e.target.value)}
+                  disabled={assigning === c._id}
+                >
+                  <option value="" disabled>Select Officer</option>
+                  {officers.map(o => <option key={o.email} value={o.email}>{o.full_name}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [activeView, setActiveView] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -294,6 +369,13 @@ export default function AdminDashboard() {
       case 'potholes': return <PotholeReportsView />;
       case 'verified': return <ProofOfWork />;
       case 'analytics': return <AnalyticsView />;
+      case 'assign': return <AssignOfficerView />;
+      case 'geo': return <GeoAnalytics />;
+      case 'fraud': return <FraudDetection />;
+      case 'officer_perf': return <OfficerPerformance />;
+      case 'trust': return <PublicTrust />;
+      case 'digital_twin': return <DigitalTwin />;
+      case 'predictions': return <Predictions />;
       default: return <OverviewView />;
     }
   };
@@ -305,6 +387,7 @@ export default function AdminDashboard() {
         setActiveView={setActiveView}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
+        showGovernance={true}
       />
       <main className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-[68px]' : 'ml-[240px]'} p-6`}>
         <DashboardHeader />

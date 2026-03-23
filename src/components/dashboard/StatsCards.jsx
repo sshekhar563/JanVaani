@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react';
-import { dashboardStats } from '../../data/mockData';
 
 export default function StatsCards() {
-  const [potholeStats, setPotholeStats] = useState({ total: 0, high: 0, medium: 0, low: 0, detected: 0 });
+  const [stats, setStats] = useState({
+    total: 0, resolved: 0, pending: 0, assigned: 0, satisfaction: 78
+  });
+  const [potholeStats, setPotholeStats] = useState({ total: 0, high: 0 });
 
   useEffect(() => {
+    // Fetch real complaint stats
+    fetch('/api/workflow/stats')
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(() => {});
+
+    // Fetch pothole stats
     fetch('/api/pothole-stats')
       .then(res => res.json())
       .then(data => setPotholeStats(data))
@@ -15,24 +24,24 @@ export default function StatsCards() {
   const cards = [
     {
       label: 'Total Issues',
-      value: dashboardStats.totalIssues.toLocaleString(),
-      change: '+12%',
+      value: stats.total.toLocaleString(),
+      change: stats.total > 0 ? `${stats.total} filed` : 'New',
       trend: 'up',
       icon: AlertCircle,
       color: 'blue',
     },
     {
       label: 'Resolved',
-      value: dashboardStats.resolvedIssues.toLocaleString(),
-      change: '+18%',
+      value: stats.resolved.toLocaleString(),
+      change: stats.total > 0 ? `${Math.round(stats.resolved / stats.total * 100)}%` : '0%',
       trend: 'up',
       icon: CheckCircle2,
       color: 'teal',
     },
     {
       label: 'Pending',
-      value: dashboardStats.pendingIssues.toLocaleString(),
-      change: '-5%',
+      value: stats.pending.toLocaleString(),
+      change: stats.total > 0 ? `${Math.round(stats.pending / stats.total * 100)}%` : '0%',
       trend: 'down',
       icon: Clock,
       color: 'amber',
@@ -47,9 +56,9 @@ export default function StatsCards() {
     },
     {
       label: 'Citizen Satisfaction',
-      value: `${dashboardStats.citizenSatisfaction}%`,
-      change: '+3%',
-      trend: 'up',
+      value: `${stats.satisfaction}%`,
+      change: stats.satisfaction >= 70 ? 'Good' : 'Needs work',
+      trend: stats.satisfaction >= 70 ? 'up' : 'down',
       icon: Users,
       color: 'teal',
     },
@@ -87,4 +96,3 @@ export default function StatsCards() {
     </div>
   );
 }
-

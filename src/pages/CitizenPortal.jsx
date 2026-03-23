@@ -240,12 +240,64 @@ export default function CitizenPortal() {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const id = `JV-${Math.floor(10000 + Math.random() * 90000)}`;
-    setComplaintId(id);
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    localStorage.removeItem('jv_draft');
+
+    try {
+      const token = localStorage.getItem('token');
+      let detectionResult = null;
+      let imageUrl = '';
+
+      // 1. Upload image for pothole detection (if images exist)
+      if (images.length > 0) {
+        const formData = new FormData();
+        formData.append('image', images[0].file);
+        try {
+          const detectRes = await fetch('/api/detect-pothole', { method: 'POST', body: formData });
+          if (detectRes.ok) {
+            detectionResult = await detectRes.json();
+            imageUrl = detectionResult.image_url || '';
+          }
+        } catch (err) { console.log('Pothole detection skipped:', err); }
+      }
+
+      // 2. Analyze text via NLP
+      let analysis = {};
+      try {
+        const analyzeRes = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: description, location: district, category: issueType }),
+        });
+        if (analyzeRes.ok) analysis = await analyzeRes.json();
+      } catch (err) { console.log('NLP analysis skipped:', err); }
+
+      // 3. Create complaint in database
+      const complaintRes = await fetch('/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          description,
+          location: district,
+          category: issueType,
+          analysis: { ...analysis, detection: detectionResult },
+          image_url: imageUrl,
+        }),
+      });
+
+      if (!complaintRes.ok) throw new Error('Failed to create complaint');
+      const complaint = await complaintRes.json();
+      const id = complaint.tracking_id || complaint._id;
+      setComplaintId(id);
+      setShowSuccess(true);
+      localStorage.removeItem('jv_draft');
+    } catch (err) {
+      console.error('Submission failed:', err);
+      alert(lang === 'hi' ? 'शिकायत दर्ज करने में विफल। कृपया पुनः प्रयास करें।' : 'Failed to submit complaint. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const closeSuccess = () => {

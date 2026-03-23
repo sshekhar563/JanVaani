@@ -11,6 +11,7 @@ import PublicSignup from './pages/PublicSignup';
 import AdminLogin from './pages/AdminLogin';
 import AdminSignup from './pages/AdminSignup';
 import NotFound from './pages/NotFound';
+import GovernanceDashboard from './pages/GovernanceDashboard';
 
 import { useAuth } from './context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -60,6 +61,11 @@ function AnimatedRoutes() {
           <Route path="/signup"       element={<PublicSignup />} />
           <Route path="/admin/login"  element={<AdminLogin />} />
           <Route path="/admin/signup" element={<AdminSignup />} />
+          <Route path="/governance"   element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <GovernanceDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="*"             element={<NotFound />} />
         </Routes>
       </motion.div>
