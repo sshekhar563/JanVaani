@@ -26,9 +26,9 @@ def run_test():
 
     # 1. Signup Users
     print("1. Registering Citizen, Admin, Officer...")
-    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": citizen_email, "password": password, "name": "Cit", "role": "public"})
-    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": officer_email, "password": password, "name": "Off", "role": "department"})
-    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": admin_email, "password": password, "name": "Adm", "role": "admin", "admin_key": "janvaani_secret_key_change_me"})
+    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": citizen_email, "password": password, "full_name": "Cit", "role": "public"})
+    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": officer_email, "password": password, "full_name": "Off", "role": "department"})
+    requests.post(f"{BASE_URL}/api/auth/signup", json={"email": admin_email, "password": password, "full_name": "Adm", "role": "admin", "registration_key": "JANVAANI_ADMIN_2024"})
 
     # 2. Login
     def login(email):
@@ -59,12 +59,16 @@ def run_test():
 
     # 4. Admin Assigns
     print("3. Admin assigns complaint to officer...")
-    r = requests.patch(f"{BASE_URL}/api/complaints/{comp_id}/assign", json={"officer_email": officer_email}, headers=a_headers)
+    r = requests.post(f"{BASE_URL}/api/workflow/assign", json={"complaint_id": comp_id, "officer_email": officer_email}, headers=a_headers)
+    if r.status_code != 200:
+        print(r.json())
     assert r.status_code == 200
 
     # 5. Officer Checks Assigned
     print("4. Officer retrieves their assigned complaints...")
-    r = requests.get(f"{BASE_URL}/api/complaints/assigned", headers=o_headers)
+    r = requests.get(f"{BASE_URL}/api/workflow/my-assignments", headers=o_headers)
+    if r.status_code != 200:
+        print(r.json())
     assert r.status_code == 200
     assert len(r.json()) > 0
 

@@ -10,7 +10,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    role: Literal["public", "admin"] = "public"
+    role: Literal["public", "admin", "department"] = "public"
     registration_key: Optional[str] = None  # For admin
     assigned_region: Optional[str] = None  # For admin
 
@@ -20,7 +20,7 @@ class UserLogin(BaseModel):
 
 class UserInDB(UserBase):
     hashed_password: str
-    role: Literal["public", "admin"] = "public"
+    role: Literal["public", "admin", "department"] = "public"
     assigned_region: Optional[str] = None
 
 class Token(BaseModel):
