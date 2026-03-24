@@ -11,9 +11,10 @@ export default function OfficerPerformance() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch('/api/officer/ranking?limit=20').then(r => r.json()).catch(() => ({ ranking: [] })),
-      fetch('/api/officer/stats').then(r => r.json()).catch(() => ({})),
+      fetch('/api/officer/ranking?limit=20', { headers }).then(r => r.json()).catch(() => ({ ranking: [] })),
+      fetch('/api/officer/stats', { headers }).then(r => r.json()).catch(() => ({})),
     ]).then(([r, s]) => {
       setRanking(r.ranking || []);
       setStats(s);

@@ -16,16 +16,10 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-DATASET_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "datasets", "311_small.csv"
-)
-
+from utils.dataset_loader import load_csv_dataset
 
 def _load_dataset():
-    path = os.path.abspath(DATASET_PATH)
-    if not os.path.isfile(path):
-        return pd.DataFrame()
-    return pd.read_csv(path, low_memory=False)
+    return load_csv_dataset("311_small.csv")
 
 
 def _linear_forecast(series, periods=6):
@@ -150,3 +144,29 @@ def predict_high_risk_areas(top_n: int = 5):
 
     risk_scores.sort(key=lambda r: r["monthly_trend_slope"], reverse=True)
     return {"areas": risk_scores[:top_n]}
+
+# ── Save Predictions to DB ──────────────────────────────────────────
+
+async def generate_and_save_predictions(db):
+    """Generate all predictions and save them to the predictions collection."""
+    if db is None:
+        return
+
+    comp = predict_complaints(6)
+    potholes = predict_potholes(6)
+    risk = predict_high_risk_areas(5)
+
+    doc = {
+        "timestamp": datetime.now().isoformat(),
+        "complaints_forecast": comp,
+        "potholes_forecast": potholes,
+        "high_risk_areas": risk
+    }
+
+    # Keep a single latest prediction doc for quick dashboard reads, or append
+    await db.predictions.update_one(
+        {"_id": "latest_predictions"},
+        {"$set": doc},
+        upsert=True
+    )
+    return doc

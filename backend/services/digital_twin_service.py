@@ -16,18 +16,14 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-DATASET_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "datasets", "311_small.csv"
-)
-
+from utils.dataset_loader import load_csv_dataset
 
 def _default_areas():
     """Generate initial area models from the 311 dataset or defaults."""
     areas = {}
-    path = os.path.abspath(DATASET_PATH)
+    df = load_csv_dataset("311_small.csv", usecols=["Borough", "Complaint Type", "Status"])
 
-    if os.path.isfile(path):
-        df = pd.read_csv(path, usecols=["Borough", "Complaint Type", "Status"], low_memory=False)
+    if not df.empty:
         for borough, grp in df.groupby("Borough"):
             b = str(borough)
             pothole_count = int(grp["Complaint Type"].str.contains("Pothole|pothole", case=False, na=False).sum())
@@ -86,8 +82,8 @@ async def simulate(db, params: dict | None = None):
     areas = state.get("areas", {})
     tick = state.get("tick", 0) + 1
 
-    pothole_delta = (params or {}).get("pothole_delta", {})
-    resolution_speed = (params or {}).get("resolution_speed", {})
+    pothole_delta = (params or {}).get("pothole_delta") or {}
+    resolution_speed = (params or {}).get("resolution_speed") or {}
 
     for name, area in areas.items():
         # Apply pothole delta

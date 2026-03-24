@@ -17,7 +17,9 @@ export default function FraudDetection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/fraud/reports?limit=50')
+    fetch('/api/fraud/reports?limit=50', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
       .then(r => r.json())
       .then(data => {
         setReports(data.reports || []);

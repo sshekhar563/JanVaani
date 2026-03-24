@@ -13,13 +13,22 @@ export default function DigitalTwin() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/digital-twin/state').then(r => r.json())
+    fetch('/api/digital-twin/state', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(r => r.json())
       .then(d => { setState(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   const runSim = () => {
     setSimulating(true);
-    fetch('/api/digital-twin/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    fetch('/api/digital-twin/simulate', { 
+      method: 'POST', 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+      }, 
+      body: '{}' 
+    })
       .then(r => r.json()).then(d => { setState(d); setSimulating(false); }).catch(() => setSimulating(false));
   };
 

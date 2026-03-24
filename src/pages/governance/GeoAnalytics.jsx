@@ -23,10 +23,11 @@ export default function GeoAnalytics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch('/api/geo/heatmap?limit=2000').then(r => r.json()).catch(() => ({ points: [] })),
-      fetch('/api/geo/clusters?n=8').then(r => r.json()).catch(() => ({ clusters: [] })),
-      fetch('/api/geo/area-stats').then(r => r.json()).catch(() => ({ stats: [] })),
+      fetch('/api/geo/heatmap?limit=2000', { headers }).then(r => r.json()).catch(() => ({ points: [] })),
+      fetch('/api/geo/clusters?n=8', { headers }).then(r => r.json()).catch(() => ({ clusters: [] })),
+      fetch('/api/geo/area-stats', { headers }).then(r => r.json()).catch(() => ({ stats: [] })),
     ]).then(([h, c, a]) => {
       setHeatmap(h.points || []);
       setClusters(c.clusters || []);

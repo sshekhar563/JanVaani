@@ -12,10 +12,11 @@ export default function Predictions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch('/api/predict/complaints?months=6').then(r => r.json()).catch(() => ({})),
-      fetch('/api/predict/potholes?months=6').then(r => r.json()).catch(() => ({})),
-      fetch('/api/predict/high-risk-areas?top=5').then(r => r.json()).catch(() => ({ areas: [] })),
+      fetch('/api/predict/complaints?months=6', { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/api/predict/potholes?months=6', { headers }).then(r => r.json()).catch(() => ({})),
+      fetch('/api/predict/high-risk-areas?top=5', { headers }).then(r => r.json()).catch(() => ({ areas: [] })),
     ]).then(([c, p, r]) => {
       setComplaints(c); setPotholes(p); setRiskAreas(r.areas || []);
       setLoading(false);

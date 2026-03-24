@@ -2,6 +2,9 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,12 +21,33 @@ from models import ComplaintRequest, Token, UserCreate, UserLogin
 from nlp_component import analyze_complaint
 from whisper_service import transcribe_audio
 from pothole_detector import PotholeDetector
+from logger import logger
+from fastapi.responses import JSONResponse
+import traceback
 
 app = FastAPI(
     title="Jan Vaani API",
     description="AI-Powered Governance Platform Backend",
     version="1.0.0",
 )
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok", "version": "1.0.0"}
+
+@app.middleware("http")
+async def global_exception_handler(request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        logger.error(f"Unhandled Exception on {request.method} {request.url}: {e}")
+        logger.debug(traceback.format_exc())
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal Server Error. Please contact support."}
+        )
+
 
 # Configuration
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
@@ -34,9 +58,12 @@ UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 DATASET_BASE = os.path.join(os.path.dirname(__file__), "..", "data", "India")
 
 # CORS
+frontend_urls_env = os.getenv("FRONTEND_URLS", "http://localhost:5173")
+allowed_origins = [url.strip() for url in frontend_urls_env.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,9 +91,20 @@ async def startup_db():
         users_collection = db.users
         complaints_collection = db.complaints
         pothole_reports_collection = db.pothole_reports
-        print("[MongoDB] Connected successfully")
+        logger.info("[MongoDB] Connected successfully")
+
+        # Initialize Indexes
+        import pymongo
+        await complaints_collection.create_index("location")
+        await complaints_collection.create_index("assigned_officer")
+        await complaints_collection.create_index("status")
+        await pothole_reports_collection.create_index("location")
+        await db.fraud_reports.create_index("report_id", unique=True)
+        await db.trust_scores.create_index("area", unique=True)
+        await db.predictions.create_index("type")
+        logger.info("[MongoDB] Indexes verified")
     except Exception as e:
-        print(f"[MongoDB] Not available ({e}). Auth endpoints will return errors.")
+        logger.error(f"[MongoDB] Not available ({e}). Auth endpoints will return errors.")
         client = None
         db = None
         users_collection = None
@@ -78,21 +116,45 @@ async def startup_db():
         from db import set_db
         if db is not None:
             set_db(db)
-            print("[Governance] Shared DB handle set")
+            logger.info("[Governance] Shared DB handle set")
     except Exception as e:
-        print(f"[Governance] DB handle setup failed: {e}")
+        logger.error(f"[Governance] DB handle setup failed: {e}")
 
     # Ensure directories exist
     os.makedirs("temp", exist_ok=True)
     os.makedirs(UPLOADS_DIR, exist_ok=True)
+    
+    if not os.path.isdir(DIST_DIR):
+        logger.warning("[Frontend] 'dist' folder not found. React app won't be served unless built.")
 
     # Initialise pothole detector
     dataset_path = DATASET_BASE if os.path.isdir(DATASET_BASE) else None
     pothole_detector = PotholeDetector(dataset_base=dataset_path)
 
-# Mount uploads directory for serving static images
-os.makedirs(UPLOADS_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+# -----------------------------------------------------------------------
+# Production Static Frontend Serving
+# -----------------------------------------------------------------------
+from fastapi.responses import FileResponse
+
+DIST_DIR = os.path.join(os.path.dirname(__file__), "..", "dist")
+
+if os.path.isdir(DIST_DIR):
+    app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
+    
+    @app.exception_handler(404)
+    async def spa_fallback(request, exc):
+        # API and Uploads should still return 404 JSON
+        path = request.url.path
+        if path.startswith("/api/") or path.startswith("/uploads/"):
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
+        
+        # Otherwise, return React's index.html for client-side routing
+        index_path = os.path.join(DIST_DIR, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+            
+        return JSONResponse({"detail": "Frontend not built. Run 'npm run build'."}, status_code=404)
+
 
 
 import bcrypt
@@ -392,7 +454,7 @@ async def get_complaint_by_id(complaint_id: str, current_user: dict = Depends(re
 
 
 @app.get("/api/complaints/{complaint_id}/status")
-async def get_complaint_status(complaint_id: str):
+async def get_complaint_status(complaint_id: str, current_user: dict = Depends(require_current_user)):
     if complaints_collection is None:
         raise HTTPException(status_code=503, detail="Database not available")
     try:
@@ -420,6 +482,8 @@ async def get_complaint_status(complaint_id: str):
 @app.post("/api/detect-pothole")
 async def detect_pothole(image: UploadFile = File(...)):
     """Detect potholes in an uploaded road image."""
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only images are allowed.")
     if pothole_detector is None:
         raise HTTPException(status_code=503, detail="Pothole detector not initialised")
 

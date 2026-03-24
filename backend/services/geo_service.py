@@ -8,17 +8,14 @@ import os
 import pandas as pd
 import numpy as np
 
-DATASET_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "datasets", "311_small.csv"
-)
-
+from utils.dataset_loader import load_csv_dataset
 
 def _load_dataset(nrows=None):
     """Load the reduced 311 dataset. Returns empty DataFrame on failure."""
-    path = os.path.abspath(DATASET_PATH)
-    if not os.path.isfile(path):
+    df = load_csv_dataset("311_small.csv")
+    if df.empty:
         return pd.DataFrame()
-    return pd.read_csv(path, nrows=nrows, low_memory=False)
+    return df.head(nrows) if nrows is not None else df
 
 
 # ── Heatmap ───────────────────────────────────────────────────────────

@@ -135,8 +135,8 @@ Create a `.env` file inside `backend/` (optional — defaults are provided):
 
 ```env
 MONGODB_URL=mongodb://localhost:27017
-SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
+SECRET_KEY=janvaani_production_super_secret_key_999
+FRONTEND_URLS=http://localhost:5173,http://localhost:3000
 ```
 
 ### 5. Start the Application
@@ -161,6 +161,19 @@ This starts **both** servers concurrently:
 1. Go to `http://localhost:5173/signup`
 2. Register with email and password
 3. Login at `http://localhost:5173/login`
+
+### 8. Run Production Server via Docker (Optional)
+We provide a multi-stage Dockerfile that builds the Vite frontend and the Python backend in one container.
+```bash
+docker build -t janvaani:latest .
+docker run -p 8000:8000 --env-file backend/.env janvaani:latest
+```
+The application will be served at `http://localhost:8000`.
+
+### 9. Run End-To-End Integration Tests
+```bash
+python backend/test_e2e.py
+```
 
 ---
 

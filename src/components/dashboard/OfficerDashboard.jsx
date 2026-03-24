@@ -16,13 +16,15 @@ export default function OfficerDashboard() {
   const email = user?.email || '';
 
   const fetchAssignments = () => {
-    fetch(`/api/workflow/my-assignments?email=${encodeURIComponent(email)}`)
+    fetch('/api/workflow/my-assignments', {
+      headers: { 'Authorization': `Bearer ${user?.token}` }
+    })
       .then(r => r.json())
       .then(data => { setAssignments(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { if (email) fetchAssignments(); }, [email]);
+  useEffect(() => { if (user?.token) fetchAssignments(); }, [user?.token]);
 
   const pending = assignments.filter(a => a.workflow_status === 'assigned');
   const proofDone = assignments.filter(a => ['proof_uploaded', 'verified', 'feedback_received'].includes(a.workflow_status));
@@ -33,10 +35,17 @@ export default function OfficerDashboard() {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await fetch(`/api/workflow/upload-proof/${complaintId}`, { method: 'POST', body: formData });
+      const res = await fetch(`/api/workflow/upload-proof/${complaintId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${user?.token}` },
+        body: formData
+      });
       if (res.ok) {
         // Auto-trigger AI verification
-        await fetch(`/api/workflow/verify-repair/${complaintId}`, { method: 'POST' });
+        await fetch(`/api/workflow/verify-repair/${complaintId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${user?.token}` }
+        });
         fetchAssignments();
       }
     } catch (e) { console.error(e); }

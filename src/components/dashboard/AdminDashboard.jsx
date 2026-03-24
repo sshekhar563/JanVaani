@@ -110,9 +110,10 @@ function PotholeReportsView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch('/api/pothole-reports').then(r => r.json()).catch(() => []),
-      fetch('/api/pothole-stats').then(r => r.json()).catch(() => ({ total: 0, high: 0, medium: 0, low: 0, detected: 0 }))
+      fetch('/api/pothole-reports', { headers }).then(r => r.json()).catch(() => []),
+      fetch('/api/pothole-stats', { headers }).then(r => r.json()).catch(() => ({ total: 0, high: 0, medium: 0, low: 0, detected: 0 }))
     ]).then(([reportsData, statsData]) => {
       setReports(Array.isArray(reportsData) ? reportsData : []);
       setStats(statsData);
@@ -301,7 +302,9 @@ function AssignOfficerView() {
       fetch('/api/complaints', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       }).then(r => r.json()).catch(() => []),
-      fetch('/api/workflow/officers').then(r => r.json()).catch(() => []),
+      fetch('/api/workflow/officers', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(r => r.json()).catch(() => []),
     ]).then(([c, o]) => {
       setComplaints(Array.isArray(c) ? c : []);
       setOfficers(Array.isArray(o) ? o : []);
@@ -313,7 +316,11 @@ function AssignOfficerView() {
     setAssigning(compId);
     try {
       await fetch('/api/workflow/assign', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+        },
         body: JSON.stringify({ complaint_id: compId, officer_email: officerEmail }),
       });
       setComplaints(prev => prev.map(c => c._id === compId ? { ...c, assigned_officer: officerEmail, status: 'Assigned' } : c));

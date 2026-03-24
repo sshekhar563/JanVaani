@@ -80,10 +80,11 @@ async def assign_complaint(req: AssignRequest, _user: dict = Depends(require_adm
 
 # ── 2. Officer fetches assigned complaints ───────────────────────────
 @router.get("/my-assignments")
-async def my_assignments(email: str, _user: dict = Depends(require_department)):
+async def my_assignments(_user: dict = Depends(require_department)):
     db, _, __ = _get_deps()
     if db is None:
         raise HTTPException(503, "Database not available")
+    email = _user.get("email")
     complaints = db.complaints
 
     docs = await complaints.find({"assigned_officer": email}).sort("assigned_at", -1).to_list(100)
@@ -108,6 +109,12 @@ async def upload_proof(complaint_id: str, image: UploadFile = File(...), _user: 
     comp = await complaints.find_one({"_id": oid})
     if not comp:
         raise HTTPException(404, "Complaint not found")
+
+    if comp.get("assigned_officer") != _user.get("email"):
+        raise HTTPException(403, "Forbidden: Only assigned officer can upload proof")
+
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(400, "Invalid file type. Only images are allowed.")
 
     # Save image
     ext = os.path.splitext(image.filename or "proof.jpg")[1] or ".jpg"
@@ -190,6 +197,9 @@ async def submit_feedback(complaint_id: str, fb: FeedbackRequest, _user: dict = 
     if not comp:
         raise HTTPException(404, "Complaint not found")
 
+    if comp.get("author_email") and comp.get("author_email") != _user.get("email"):
+        raise HTTPException(403, "Forbidden: Only the complaint author can submit feedback")
+
     if fb.rating < 1 or fb.rating > 5:
         raise HTTPException(400, "Rating must be 1-5")
 
@@ -202,12 +212,18 @@ async def submit_feedback(complaint_id: str, fb: FeedbackRequest, _user: dict = 
     await complaints.update_one({"_id": oid}, {
         "$set": {
             "citizen_feedback": feedback,
-            "status": "Resolved",
-            "workflow_status": "feedback_received",
+            "status": "Closed",
+            "workflow_status": "closed",
             "updated_at": _now(),
+            "closed_at": _now(),
         },
         "$push": {
-            "timeline": _timeline_entry("feedback_received", f"Citizen rated {fb.rating}/5")
+            "timeline": {
+                "$each": [
+                    _timeline_entry("feedback_received", f"Citizen rated {fb.rating}/5"),
+                    _timeline_entry("closed", "Complaint workflow completed and closed")
+                ]
+            }
         }
     })
 
@@ -228,6 +244,19 @@ async def submit_feedback(complaint_id: str, fb: FeedbackRequest, _user: dict = 
             await compute_area_trust(db, location)
         except Exception as e:
             print(f"[Workflow] Trust update failed: {e}")
+
+    # ── Auto-update digital twin & predictions on close ──
+    try:
+        from services.digital_twin_service import simulate
+        await simulate(db, params={"resolution_speed": {location: 2.0}, "pothole_delta": {location: -1}})
+    except Exception as e:
+        print(f"[Workflow] Digital twin update failed: {e}")
+
+    try:
+        from services.prediction_service import generate_and_save_predictions
+        await generate_and_save_predictions(db)
+    except Exception as e:
+        print(f"[Workflow] Prediction update failed: {e}")
 
     return {"message": "Feedback submitted", "feedback": feedback}
 
